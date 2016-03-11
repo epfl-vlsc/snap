@@ -78,14 +78,15 @@ void AlignerContext::runAlignment(int argc, const char **argv, const char *versi
         return;
     }
 
-    runAlignment(options, NULL);
+    runAlignment(options, NULL, NULL);
 }
 
-void AlignerContext::runAlignment(AlignerOptions* options, GenomeIndex* index)
+void AlignerContext::runAlignment(AlignerOptions* options, ReadWriterSupplier* writerSupplier, GenomeIndex* index)
 {
 #ifdef _MSC_VER
 	useTimingBarrier = options->useTimingBarrier;
 #endif
+    this->writerSupplier = writerSupplier;
 	
 	if (!initialize(index)) {
 		return;
@@ -215,7 +216,6 @@ AlignerContext::initialize(GenomeIndex* preloadedIndex)
     void
 AlignerContext::beginIteration()
 {
-    writerSupplier = NULL;
     alignStart = timeInMillis();
     clipping = options->clipping;
     totalThreads = options->numThreads;
@@ -242,7 +242,7 @@ AlignerContext::beginIteration()
 
     typeSpecificBeginIteration();
 
-    if (UnknownFileType != options->outputFile.fileType) {
+    if (writerSupplier == NULL && UnknownFileType != options->outputFile.fileType) {
         const FileFormat* format;
         if (SAMFile == options->outputFile.fileType) {
             format = FileFormat::SAM[options->useM];

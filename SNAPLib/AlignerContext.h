@@ -49,9 +49,9 @@ public:
 
     void runAlignment(int argc, const char **argv, const char *version, unsigned *nArgsConsumed);
 
-    // Same as above, but meant for non-command line usage.
+    // Same as above, but meant for in-memory, non-command line usage.
 
-    void runAlignment(AlignerOptions* options, GenomeIndex* index);
+    void runAlignment(AlignerOptions* options, ReadWriterSupplier* writerSupplier, GenomeIndex* index);
     
     // ParallelTask template
 
