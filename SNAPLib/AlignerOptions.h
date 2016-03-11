@@ -49,8 +49,8 @@ struct SNAPFile {
     bool                 isStdio;           // Only applies to the first file for two-file inputs
 	bool				 omitSQLines;		// Special undocumented option for Charles Chiu's group.  Mostly a bad idea.
 
-    PairedReadSupplierGenerator *createPairedReadSupplierGenerator(int numThreads, bool quicklyDropUnpairedReads, const ReaderContext& context);
-    ReadSupplierGenerator *createReadSupplierGenerator(int numThreads, const ReaderContext& context);
+    virtual PairedReadSupplierGenerator *createPairedReadSupplierGenerator(int numThreads, bool quicklyDropUnpairedReads, const ReaderContext& context);
+    virtual ReadSupplierGenerator *createReadSupplierGenerator(int numThreads, const ReaderContext& context);
     static bool generateFromCommandLine(const char **args, int nArgs, int *argsConsumed, SNAPFile *snapFile, bool paired, bool isInput);
 };
 
