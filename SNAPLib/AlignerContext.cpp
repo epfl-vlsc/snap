@@ -235,19 +235,8 @@ AlignerContext::beginIteration()
     typeSpecificBeginIteration();
 
     if (UnknownFileType != options->outputFile.fileType) {
-        const FileFormat* format;
-        if (SAMFile == options->outputFile.fileType) {
-            format = FileFormat::SAM[options->useM];
-        } else if (BAMFile == options->outputFile.fileType) {
-            format = FileFormat::BAM[options->useM];
-        } else {
-            //
-            // This shouldn't happen, because the command line parser should catch it.  Perhaps you've added a new output file format and just
-            // forgoten to add it here.
-            //
-            WriteErrorMessage("AlignerContext::beginIteration(): unknown file type %d for '%s'\n", options->outputFile.fileType, options->outputFile.fileName);
-            soft_exit(1);
-        }
+        const FileFormat* format = FileFormat::getFormat(options);
+
         format->setupReaderContext(options, &readerContext);
 
         writerSupplier = format->getWriterSupplier(options, readerContext.genome);
