@@ -305,9 +305,9 @@ PairedAlignerContext::PairedAlignerContext(AlignerExtension* i_extension)
 {
 }
 
-bool PairedAlignerContext::initialize()
+bool PairedAlignerContext::initialize(GenomeIndex* preloadedIndex)
 {
-    AlignerContext::initialize();
+    AlignerContext::initialize(preloadedIndex);
     PairedAlignerOptions* options2 = (PairedAlignerOptions*) options;
     minSpacing = options2->minSpacing;
     maxSpacing = options2->maxSpacing;

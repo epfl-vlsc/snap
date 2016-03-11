@@ -78,16 +78,16 @@ void AlignerContext::runAlignment(int argc, const char **argv, const char *versi
         return;
     }
 
-    runAlignment(options);
+    runAlignment(options, NULL);
 }
 
-void AlignerContext::runAlignment(AlignerOptions* options)
+void AlignerContext::runAlignment(AlignerOptions* options, GenomeIndex* index)
 {
 #ifdef _MSC_VER
 	useTimingBarrier = options->useTimingBarrier;
 #endif
 	
-	if (!initialize()) {
+	if (!initialize(index)) {
 		return;
 	}
     extension->initialize();
@@ -143,9 +143,12 @@ AlignerContext::finishThread(AlignerContext* common)
 }
 
     bool
-AlignerContext::initialize()
+AlignerContext::initialize(GenomeIndex* preloadedIndex)
 {
-    if (g_indexDirectory == NULL || strcmp(g_indexDirectory, options->indexDir) != 0) {
+    if (preloadedIndex != NULL) {
+        WriteStatusMessage("Using pre-loaded index.");
+        index = preloadedIndex;
+    } else if (g_indexDirectory == NULL || strcmp(g_indexDirectory, options->indexDir) != 0) {
         delete g_index;
         g_index = NULL;
         delete g_indexDirectory;

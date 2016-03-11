@@ -39,7 +39,7 @@ protected:
 
     // AlignerContext
     
-    virtual bool initialize();
+    virtual bool initialize(GenomeIndex* preloadedIndex);
 
     virtual AlignerStats* newStats();
     

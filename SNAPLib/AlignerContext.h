@@ -51,7 +51,7 @@ public:
 
     // Same as above, but meant for non-command line usage.
 
-    void runAlignment(AlignerOptions* options);
+    void runAlignment(AlignerOptions* options, GenomeIndex* index);
     
     // ParallelTask template
 
@@ -76,7 +76,7 @@ public:
     AlignerOptions* parseOptions(int argc, const char **argv, const char *version, unsigned *argsConsumed, bool paired);
     
     // initialize from options
-    virtual bool initialize();
+    virtual bool initialize(GenomeIndex* preloadedIndex);
 
     // new stats object
     virtual AlignerStats* newStats() = 0;
