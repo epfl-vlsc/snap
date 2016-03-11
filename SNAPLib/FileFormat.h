@@ -103,22 +103,6 @@ public:
 
     static const FileFormat* SAM[2]; // 0 for =, 1 for M (useM flag)
     static const FileFormat* BAM[2];
-
-    static const FileFormat* getFormat(AlignerOptions* options) {
-        if (SAMFile == options->outputFile.fileType) {
-            return FileFormat::SAM[options->useM];
-        }
-
-        if (BAMFile == options->outputFile.fileType) {
-            return FileFormat::BAM[options->useM];
-        }
-
-        //
-        // This shouldn't happen, because the command line parser should catch it.  Perhaps you've added a new output file format and just
-        // forgoten to add it here.
-        //
-        WriteErrorMessage("unknown file type %d for '%s'\n", options->outputFile.fileType, options->outputFile.fileName);
-        soft_exit(1);
-        return NULL;
-    }
+    static const FileFormat* FASTQ;
+    static const FileFormat* FASTQZ;
 };
