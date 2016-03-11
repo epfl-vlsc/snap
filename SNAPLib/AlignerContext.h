@@ -48,6 +48,10 @@ public:
     // running alignment
 
     void runAlignment(int argc, const char **argv, const char *version, unsigned *nArgsConsumed);
+
+    // Same as above, but meant for non-command line usage.
+
+    void runAlignment(AlignerOptions* options);
     
     // ParallelTask template
 

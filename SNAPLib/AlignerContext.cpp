@@ -73,11 +73,16 @@ void AlignerContext::runAlignment(int argc, const char **argv, const char *versi
 {
     options = parseOptions(argc, argv, version, argsConsumed, isPaired());
 
-	if (NULL == options) {	// Didn't parse correctly
-		*argsConsumed = argc;
-		return;
-	}
+    if (NULL == options) {	// Didn't parse correctly
+        *argsConsumed = argc;
+        return;
+    }
 
+    runAlignment(options);
+}
+
+void AlignerContext::runAlignment(AlignerOptions* options)
+{
 #ifdef _MSC_VER
 	useTimingBarrier = options->useTimingBarrier;
 #endif
