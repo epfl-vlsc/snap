@@ -24,6 +24,7 @@ Revision History:
 --*/
 
 #pragma once
+#include "stdafx.h"
 
 #ifdef  _MSC_VER
 #include <Windows.h>
