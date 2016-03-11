@@ -234,5 +234,3 @@ private:
 
     const bool useM;
 };
-
-static FileFormat* SAMFormats[] = { new SAMFormat(false), new SAMFormat(true) };// indexer: 0 for =, 1 for M (useM flag)

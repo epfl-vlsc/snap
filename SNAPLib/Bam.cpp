@@ -662,13 +662,43 @@ BAMReader::getExtra(
     return result;
 }
 
-class BAMFormatInitializer {
+
+class BAMFormat : public FileFormat
+{
 public:
-    BAMFormatInitializer() {
-        FileFormat::FORMATS[FileType::BAMFile] = BAMFormats;
-    }
+    BAMFormat(bool i_useM) : useM(i_useM) {}
+
+    virtual void getSortInfo(const Genome* genome, char* buffer, _int64 bytes, GenomeLocation* o_location, GenomeDistance* o_readBytes, int* o_refID, int* o_pos) const;
+
+    virtual void setupReaderContext(AlignerOptions* options, ReaderContext* readerContext) const
+    { FileFormat::setupReaderContext(options, readerContext, true); }
+
+    virtual ReadWriterSupplier* getWriterSupplier(AlignerOptions* options, const Genome* genome) const;
+
+    virtual bool writeHeader(
+        const ReaderContext& context, char *header, size_t headerBufferSize, size_t *headerActualSize,
+        bool sorted, int argc, const char **argv, const char *version, const char *rgLine, bool omitSQLines) const;
+
+    virtual bool writeRead(
+        const ReaderContext& context, LandauVishkinWithCigar * lv, char * buffer, size_t bufferSpace,
+        size_t * spaceUsed, size_t qnameLen, Read * read, AlignmentResult result,
+        int mapQuality, GenomeLocation genomeLocation, Direction direction, bool secondaryAlignment, int * o_addFrontClipping,
+        bool hasMate = false, bool firstInPair = false, Read * mate = NULL,
+        AlignmentResult mateResult = NotFound, GenomeLocation mateLocation = 0, Direction mateDirection = FORWARD,
+        bool alignedAsPair = false) const;
+
+private:
+
+    static int computeCigarOps(const Genome * genome, LandauVishkinWithCigar * lv,
+        char * cigarBuf, int cigarBufLen,
+        const char * data, unsigned dataLength, unsigned basesClippedBefore, unsigned extraBasesClippedBefore, unsigned basesClippedAfter,
+        unsigned frontHardClipping, unsigned backHardClipping,
+        GenomeLocation genomeLocation, bool isRC, bool useM, int * o_editDistance, int * o_addFrontClipping);
+
+    const bool useM;
 };
-static BAMFormatInitializer bam_format_init;
+
+const FileFormat* FileFormat::BAM[] = { new BAMFormat(false), new BAMFormat(true) };
 
     void
 BAMFormat::getSortInfo(
@@ -762,7 +792,7 @@ BAMFormat::writeHeader(
     BAMHeader* bamHeader = (BAMHeader*) header;
     bamHeader->magic = BAMHeader::BAM_MAGIC;
     size_t samHeaderSize;
-    bool ok = SAMFormats[0]->writeHeader(context, bamHeader->text(), headerBufferSize - BAMHeader::size(0), &samHeaderSize,
+    bool ok = FileFormat::SAM[0]->writeHeader(context, bamHeader->text(), headerBufferSize - BAMHeader::size(0), &samHeaderSize,
         sorted, argc, argv, version, rgLine, omitSQLines);
     if (! ok) {
         return false;
