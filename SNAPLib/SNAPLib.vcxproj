@@ -233,6 +233,7 @@
     <ClCompile Include="exit.cpp" />
     <ClCompile Include="FASTA.cpp" />
     <ClCompile Include="FASTQ.cpp" />
+    <ClCompile Include="FileFormat.cpp" />
     <ClCompile Include="GenericFile.cpp" />
     <ClCompile Include="GenericFile_Blob.cpp" />
     <ClCompile Include="GenericFile_HDFS.cpp" />

@@ -711,7 +711,13 @@ SAMReader::createPairedReadSupplierGenerator(
 }
 
 
-const FileFormat* FileFormat::SAM[] = { new SAMFormat(false), new SAMFormat(true) };
+class SAMFormatInitializer {
+public:
+    SAMFormatInitializer() {
+        FileFormat::FORMATS[FileType::SAMFile] = SAMFormats;
+    }
+};
+static SAMFormatInitializer sam_format_init;
 
     void
 SAMFormat::getSortInfo(
