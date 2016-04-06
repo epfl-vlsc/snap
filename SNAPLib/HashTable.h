@@ -211,7 +211,7 @@ private:
         // Returns either the entry for this key, or else the entry where the key would be
         // inserted if it's not in the table.
         //
-        void* getEntryForKey(__in KeyType key) const;
+        void* getEntryForKey(KeyType key) const;
 
         friend class SeedCountIterator;
 

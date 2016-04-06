@@ -104,8 +104,6 @@ typedef void *PVOID;
 static const double LOG10 = log(10.0);
 inline double exp10(double x) { return exp(x * LOG10); }
 
-#define __in /* nothing */
-
 #define PATH_SEP '/'
 
 #ifdef DEBUG
