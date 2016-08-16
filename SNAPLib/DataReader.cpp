@@ -1809,7 +1809,7 @@ DecompressDataReader::decompressThread(
                     fprintf(stderr, "insufficient decompression space, increase -xf parameter\n");
                     soft_exit(1);
                 }
-                if (input > entry->compressedValid || zip->BSIZE() >= BAM_BLOCK || zip->ISIZE() > BAM_BLOCK) {
+                if (input > entry->compressedValid || zip->ISIZE() > BAM_BLOCK) {
                     fprintf(stderr, "error reading BAM file at offset %lld\n", reader->getFileOffset());
                     soft_exit(1);
                 }

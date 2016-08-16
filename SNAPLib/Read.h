@@ -210,6 +210,8 @@ class DataWriterSupplier;
 class ReadWriterSupplier
 {
 public:
+    virtual ~ReadWriterSupplier() { }
+    
     virtual ReadWriter* getWriter() = 0;
 
     virtual void close() = 0;
@@ -290,7 +292,7 @@ public:
                     //
                     // Assert that it's in the other read's local buffer.
                     //
-                    _ASSERT(other.rcData >= other.localBuffer && other.rcData <= other.localBuffer + other.localBufferAllocationOffset - unclippedLength);
+                    _ASSERT(OTHER.rcData >= other.localBuffer && other.rcData <= other.localBuffer + other.localBufferAllocationOffset - unclippedLength);
 
                     //
                     // And put ours at the same offset in our local buffer.
@@ -312,7 +314,7 @@ public:
             //
             // Now set up the data, unclippedData, quality and unclippedQuality pointers.
             //
-            if (NULL == other.localBuffer || other.data < other.localBuffer || other.data >= other.localBuffer + other.localBufferAllocationOffset - dataLength) {
+            if (other.data < other.localBuffer || other.data >= other.localBuffer + other.localBufferAllocationOffset - dataLength) {
                 //
                 // Not in the other read's local buffer, so it must be external.  Copy it.
                 //
@@ -747,7 +749,7 @@ private:
                 // This loop body intentionally left blank.
             }
             if (i > 1 && cigarBuffer[i-1] == clippingChar) {
-                for (i = i - 2; i >=0 && cigarBuffer[i] >= '0' && cigarBuffer[i] <= '9'; i--) {
+                for (i = i - 2; cigarBuffer[i] >= '0' && cigarBuffer[i] <= '9'; i--) {
                     // This loop body intentionally left blank.
                 }
                 //

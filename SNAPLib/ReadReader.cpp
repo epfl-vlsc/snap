@@ -41,6 +41,7 @@ public:
                     unsigned *flag, const char **cigar)
     {
         // return getNextRead(read,alignmentResult,genomeLocation,isRC,mapQ,flag,false,cigar);
+        return false;
     }
     
     virtual void holdBatch(DataBatch batch)

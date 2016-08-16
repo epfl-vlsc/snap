@@ -141,7 +141,7 @@ MultiInputPairedReadSupplier::~MultiInputPairedReadSupplier()
 MultiInputPairedReadSupplier::getNextReadPair(Read **read0, Read **read1)
 {
     if (0 == nRemainingReadSuppliers) {
-        return NULL;
+        return false;
     }
 
     _ASSERT(nextReadSupplier < nRemainingReadSuppliers);

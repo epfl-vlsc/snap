@@ -190,8 +190,6 @@ protected:
 
     static void ComputeBiasTableWorkerThreadMain(void *param);
 
-    struct OverflowBackpointer;
-
     struct BuildHashTablesThreadContext {
 		unsigned						 nThreads;
 		unsigned						 whichThread;

@@ -244,7 +244,7 @@ ReadSupplierQueue::getElements(ReadQueueElement **element1, ReadQueueElement **e
             // Everything's queued and the queue is empty.  No more work.
             //
             //WriteErrorMessage("Thread %u: getElement loop exit allReadsQueued\n", GetThreadId());
-            return NULL;
+            return false;
         }
         //WriteErrorMessage("Thread %u: getElements loop wait readsReady\n", GetThreadId());
         WaitForEvent(&readsReady);

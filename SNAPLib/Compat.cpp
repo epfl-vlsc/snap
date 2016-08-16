@@ -1119,6 +1119,7 @@ public:
     bool destroy() {
         pthread_cond_destroy(&cond);
         pthread_mutex_destroy(&lock);
+        return true;
     }
 };
 
@@ -1841,7 +1842,7 @@ int _fseek64bit(FILE *stream, _int64 offset, int origin)
 {
 #ifdef __APPLE__
     // Apple's file pointers are already 64-bit so just use fseeko.
-    fseeko(stream, offset, origin);
+    return fseeko(stream, offset, origin);
 #else
     return fseeko64(stream, offset, origin);
 #endif
@@ -2065,7 +2066,7 @@ bool connectNamedPipes(NamedPipe *pipe)
 	    if (fcntl(fileno(pipe->output), F_SETLKW, &lock) < 0) {
 	        fprintf(stderr,"Unable to clear named pipe lock, errno %d\n", errno);
 	        delete pipe;
-	        return NULL;
+	        return false;
 	    }
     } else {
         pipe->output = connectPipe(outputPipeName, false);

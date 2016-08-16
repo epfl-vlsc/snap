@@ -940,7 +940,7 @@ Return Value:
                 // cause us to lose confidence in the alignment, since they're probably both pretty good).
                 //
                 if (anyNearbyCandidatesAlreadyScored) {
-                    if (elementToScore->bestScore < score || elementToScore->bestScore == score && matchProbability <= elementToScore->matchProbabilityForBestScore) {
+                    if ((elementToScore->bestScore < score || elementToScore->bestScore == score) && (matchProbability <= elementToScore->matchProbabilityForBestScore)) {
                         //
                         // This is a no better mapping than something nearby that we already tried.  Just ignore it.
                         //
@@ -987,7 +987,7 @@ Return Value:
                     }
 
                     if (NULL != nearbyElement) {
-                        if (nearbyElement->bestScore < score || nearbyElement->bestScore == score && nearbyElement->matchProbabilityForBestScore >= matchProbability) {
+                        if ((nearbyElement->bestScore < score || nearbyElement->bestScore == score) && (nearbyElement->matchProbabilityForBestScore >= matchProbability)) {
                             //
                             // Again, this no better than something nearby we already tried.  Give up.
                             //

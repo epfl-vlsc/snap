@@ -219,7 +219,7 @@ SAMReader::parseHeader(
             // Verify that they actually match what's in our reference genome.
             //
             numSQLines++;
-            if (nextLineToProcess + 3 >= endOfBuffer || ' ' != nextLineToProcess[3] && '\t' != nextLineToProcess[3]) {
+            if ((nextLineToProcess + 3 >= endOfBuffer || ' ' != nextLineToProcess[3]) && ('\t' != nextLineToProcess[3])) {
                 WriteErrorMessage("Malformed SAM file '%s' has @SQ without a following space or tab.\n",fileName);
                 return false;
             }

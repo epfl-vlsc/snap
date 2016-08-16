@@ -243,7 +243,7 @@ log10bucket(
     _int64 n)
 {
     _int64 factor = 1;
-    while (abs(n) >= 10) {
+    while (std::abs(n) >= 10) {
         n /= 10;
         factor *= 10;
     }
@@ -503,8 +503,8 @@ int cheezyLogBase2(_int64 value);
 // There's a similar function for GenomeLocations defined in Genome.h.
 //
 inline bool isWithin(unsigned a, unsigned b, unsigned distance)
-    {
-	return a <= b && a+distance >= b || a >= b && a <= b + distance;
+{
+	return (a <= b && a+distance >= b) || (a >= b && a <= b + distance);
 }
 
 inline int getSignBit64(_int64 value)

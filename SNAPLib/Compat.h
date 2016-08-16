@@ -389,6 +389,7 @@ void AdviseMemoryMappedFilePrefetch(const MemoryMappedFile *mappedFile);
 class AsyncFile
 {
 public:
+    virtual ~AsyncFile() { }
 
     // open a new file for reading and/or writing
     static AsyncFile* open(const char* filename, bool write);
@@ -400,6 +401,8 @@ public:
     class Writer
     {
     public:
+        virtual ~Writer() { }
+        
         // waits for all writes to complete, frees resources
         virtual bool close() = 0;
 
@@ -417,6 +420,8 @@ public:
     class Reader
     {
     public:
+        virtual ~Reader() { }
+        
         // waits for alls reads to complete, frees resources
         virtual bool close() = 0;
 
