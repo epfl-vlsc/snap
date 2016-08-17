@@ -387,8 +387,8 @@ AlignerContext::printStats()
 				100.0 * stats->singleHits / stats->totalReads,
 				100.0 * stats->multiHits / stats->totalReads,
 				100.0 * stats->notFound / stats->totalReads,
-                stats->lvCalls,
 				100.0 * stats->alignedAsPairs / stats->totalReads,
+                stats->lvCalls,
                 stats->totalReads,
                 (1000.0 * (stats->totalReads - stats->uselessReads)) / max(alignTime, (_int64)1));
 

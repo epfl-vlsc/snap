@@ -682,7 +682,7 @@ GenomeIndex::BuildIndexToDirectory(const Genome *genome, int seedLen, double sla
                 fprintf(histogramFile,"%d\t%d\n", i, histogram[i]);
             }
         }
-        fprintf(histogramFile, "%d larger than %d with %d total genome locations, largest seed %d\n", countOfTooBigForHistogram, maxHistogramEntry, sumOfTooBigForHistogram, largestSeed);
+        fprintf(histogramFile, "%llu larger than %d with %llu total genome locations, largest seed %llu\n", countOfTooBigForHistogram, maxHistogramEntry, sumOfTooBigForHistogram, largestSeed);
         fclose(histogramFile);
         delete [] histogram;
     }
@@ -738,7 +738,7 @@ GenomeIndex::BuildIndexToDirectory(const Genome *genome, int seedLen, double sla
     }
 
     fprintf(indexFile,"%d %d %d %lld %d %d %d %lld %d %d", GenomeIndexFormatMajorVersion, GenomeIndexFormatMinorVersion, index->nHashTables, 
-        index->overflowTableSize, seedLen, chromosomePaddingSize, hashTableKeySize, totalBytesWritten, large ? 0 : 1, locationSize); 
+            index->overflowTableSize, seedLen, chromosomePaddingSize, hashTableKeySize, (long long)totalBytesWritten, large ? 0 : 1, locationSize); 
 
     fclose(indexFile);
  
@@ -1636,8 +1636,8 @@ GenomeIndex::loadFromDirectory(char *directoryName, bool map, bool prefetch)
     unsigned hashTableKeySize;
     unsigned smallHashTable;
     unsigned locationSize;
-    if (10 != (nRead = sscanf(indexFileBuf,"%d %d %d %lld %d %d %d %lld %d %d", &majorVersion, &minorVersion, &nHashTables, &overflowTableSize, &seedLen, &chromosomePadding, 
-											&hashTableKeySize, &hashTablesFileSize, &smallHashTable, &locationSize))) {
+    if (10 != (nRead = sscanf(indexFileBuf,"%d %d %d %lld %d %d %u %lu %d %d", &majorVersion, &minorVersion, &nHashTables, &overflowTableSize, &seedLen, &chromosomePadding, 
+                              &hashTableKeySize, &hashTablesFileSize, &smallHashTable, &locationSize))) {
         if (3 == nRead || 6 == nRead || 7 == nRead || 9 == nRead) {
             WriteErrorMessage("Indices built by versions before 1.0dev.21 are no longer supported.  Please rebuild your index.\n");
         } else {

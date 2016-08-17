@@ -1692,11 +1692,11 @@ DecompressDataReader::findPointer(
     for (int i = 0; i < count; i++) {
         Entry* e = &entries[i];
         if (e->compressed <= p && p < e->compressed + e->compressedValid) {
-            sprintf(result, "compressed #%d @ %lld", i, (char*)p - e->compressed);
+            sprintf(result, "compressed #%d @ %ld", i, (char*)p - e->compressed);
             break;
         }
         if (e->decompressed <= p && p < e->decompressed + extraBytes) {
-            sprintf(result, "decompressed #%d %lld", i, (char*) p - e->decompressed);
+            sprintf(result, "decompressed #%d %ld", i, (char*) p - e->decompressed);
             break;
         }
         if (e->decompressed + extraBytes <= p && p < e->decompressed + totalExtra) {
