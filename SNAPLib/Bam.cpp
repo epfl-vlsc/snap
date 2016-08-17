@@ -234,15 +234,15 @@ const char* BAMAlignment::CodeToCigar = "MIDNSHP=X";
 _uint8 BAMAlignment::CigarToCode[256];
 _uint8 BAMAlignment::CigarCodeToRefBase[9] = {1, 0, 1, 1, 0, 0, 1, 1, 1};
 
-const _uint8 BAM_CIGAR_M = 0;
-const _uint8 BAM_CIGAR_I = 1;
-const _uint8 BAM_CIGAR_D = 2;
-const _uint8 BAM_CIGAR_N = 3;
+//const _uint8 BAM_CIGAR_M = 0;
+//const _uint8 BAM_CIGAR_I = 1;
+//const _uint8 BAM_CIGAR_D = 2;
+//const _uint8 BAM_CIGAR_N = 3;
 const _uint8 BAM_CIGAR_S = 4;
 const _uint8 BAM_CIGAR_H = 5;
-const _uint8 BAM_CIGAR_P = 6;
-const _uint8 BAM_CIGAR_EQUAL = 7;
-const _uint8 BAM_CIGAR_X = 8;
+//const _uint8 BAM_CIGAR_P = 6;
+//const _uint8 BAM_CIGAR_EQUAL = 7;
+//const _uint8 BAM_CIGAR_X = 8;
 
 BAMAlignment::_init BAMAlignment::_init_;
 
@@ -875,7 +875,6 @@ BAMFormat::writeRead(
     GenomeDistance extraBasesClippedBefore;
     unsigned basesClippedAfter;
     int editDistance;
-    int newAddFrontClipping = 0;
 
     if (!SAMFormat::createSAMLine(context.genome, lv, 
         // outputs:
@@ -1106,7 +1105,7 @@ BAMFormat::computeCigarOps(
 class BAMFilter : public DataWriter::Filter
 {
 public:
-    BAMFilter(DataWriter::FilterType i_type) : Filter(i_type), offsets(1000), header(false) {}
+    BAMFilter(DataWriter::FilterType i_type) : Filter(i_type), header(false), offsets(1000) {}
 
     virtual ~BAMFilter() {}
 
@@ -1141,7 +1140,10 @@ BAMFilter::onNextBatch(
     size_t offset,
     size_t bytes)
 {
-    bool ok = writer->getBatch(-1, &currentBuffer, NULL, NULL, NULL, &currentBufferBytes, &currentOffset);
+#ifdef DEBUG
+    bool ok =
+#endif
+        writer->getBatch(-1, &currentBuffer, NULL, NULL, NULL, &currentBufferBytes, &currentOffset);
     _ASSERT(ok);
     currentWriter = writer;
     int index = 0;
@@ -1196,7 +1198,6 @@ BAMFilter::getNextRead(
 {
     char* p = (char*) bam;
     size_t size = bam->size();
-    size_t oldOffset = *io_offset;
     *io_offset += size;
     if (p >= currentBuffer && p < currentBuffer + currentBufferBytes) {
         p += bam->size();
@@ -1603,9 +1604,9 @@ public:
         FilterSupplier(DataWriter::ReadFilter),
         indexFileName(i_indexFileName),
         genome(i_genome),
-        gzipSupplier(i_gzipSupplier),
         lastRefId(-1),
-        lastBin(0), binStart(0), lastBamEnd(0)
+        lastBin(0), binStart(0), lastBamEnd(0),
+        gzipSupplier(i_gzipSupplier)
     {
         refs = genome ? new RefInfo[genome->getNumContigs()] : NULL;
         readCounts[0] = readCounts[1] = 0;

@@ -37,8 +37,8 @@ class GzipCompressWorkerManager : public ParallelWorkerManager
 {
 public:
     GzipCompressWorkerManager(GzipWriterFilterSupplier* i_filterSupplier)
-        : filterSupplier(i_filterSupplier), buffer(NULL),
-        chunkSize(i_filterSupplier->chunkSize), bam(i_filterSupplier->bamFormat)
+        : chunkSize(i_filterSupplier->chunkSize), bam(i_filterSupplier->bamFormat),
+          filterSupplier(i_filterSupplier), buffer(NULL)
     {}
 
     virtual ~GzipCompressWorkerManager();
@@ -175,7 +175,6 @@ GzipCompressWorker::step()
         zstream.opaque = heap;
     }
     //fprintf(stderr, "zip task thread %d begin\n", GetCurrentThreadId());
-    _int64 start = timeInMillis();
     int begin = (getThreadNum() * supplier->nChunks) / getNumThreads();
     int end = ((1 + getThreadNum()) * supplier->nChunks) / getNumThreads();
     for (int i = begin; i < end; i++) {

@@ -27,11 +27,11 @@ private:
 
 public:
     VariableSizeVector(int i_capacity = 16)
-        : entries(NULL), count(0), capacity(i_capacity)
+    : entries(NULL), capacity(i_capacity), count(0)
     {}
     
     VariableSizeVector(VariableSizeVector& other)
-        : entries(other.entries), count(other.count), capacity(other.capacity)
+        : entries(other.entries), capacity(other.capacity), count(other.count)
     {
         other.count = 0;
         other.entries = NULL;

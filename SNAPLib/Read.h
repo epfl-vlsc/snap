@@ -226,12 +226,13 @@ class Read {
 public:
         Read() :    
             id(NULL), data(NULL), quality(NULL), 
-            localBufferAllocationOffset(0),
-            clippingState(NoClipping), currentReadDirection(FORWARD),
-            upcaseForwardRead(NULL), auxiliaryData(NULL), auxiliaryDataLength(0),
-            readGroup(NULL), originalAlignedLocation(-1), originalMAPQ(-1), originalSAMFlags(0),
+            readGroup(NULL), clippingState(NoClipping), additionalFrontClipping(0),
+            originalAlignedLocation(-1), originalMAPQ(-1), originalSAMFlags(0),
             originalFrontClipping(0), originalBackClipping(0), originalFrontHardClipping(0), originalBackHardClipping(0),
-            originalRNEXT(NULL), originalRNEXTLength(0), originalPNEXT(0), additionalFrontClipping(0)
+            originalRNEXT(NULL), originalRNEXTLength(0), originalPNEXT(0),
+            localBufferAllocationOffset(0),
+            upcaseForwardRead(NULL), currentReadDirection(FORWARD), auxiliaryData(NULL), auxiliaryDataLength(0)
+
         {}
 
         Read(const Read& other) :  localBufferAllocationOffset(0)
@@ -775,7 +776,7 @@ private:
 //
 class ReadWithOwnMemory : public Read {
 public:
-    ReadWithOwnMemory() : Read(), extraBuffer(NULL), dataBuffer(NULL), idBuffer(NULL), qualityBuffer(NULL), auxBuffer(NULL) {}
+ ReadWithOwnMemory() : Read(), extraBuffer(NULL), idBuffer(NULL), dataBuffer(NULL), qualityBuffer(NULL), auxBuffer(NULL) {}
 
     ReadWithOwnMemory(const Read &baseRead) {
         set(baseRead);

@@ -106,8 +106,6 @@ ReadSupplierQueue::~ReadSupplierQueue()
     bool 
 ReadSupplierQueue::startReaders()
 {
-    bool worked = true;
-
     if (singleReader[1] == NULL) {
         nReadersRunning = 1;
     } else {
@@ -274,7 +272,9 @@ ReadSupplierQueue::getElements(ReadQueueElement **element1, ReadQueueElement **e
         // make a copy of the min# of reads from larger element
         // shrink the larger element and leave it there
         ReadQueueElement* elements[2] = {*element1, *element2};
+#ifdef DEBUG
         int sizes[2] = {elements[0]->totalReads, elements[1]->totalReads};
+#endif
         int largerOne = elements[1]->totalReads > elements[0]->totalReads;
         int minReads = elements[1-largerOne]->totalReads;
         memcpy(copyOut->reads, elements[largerOne]->reads, minReads * sizeof(Read));
@@ -611,11 +611,9 @@ ReadSupplierQueue::ReaderThread(ReaderThreadParams *params)
 ReadSupplierFromQueue::ReadSupplierFromQueue(
     ReadSupplierQueue *i_queue)
     :
+    done(false),
     queue(i_queue),
-    outOfReads(false),
-    currentElement(NULL),
-    nextReadIndex(0),
-    done(false)
+    nextReadIndex(0)
 {
 }
 
@@ -649,7 +647,7 @@ ReadSupplierFromQueue::getNextRead()
 }
 
 PairedReadSupplierFromQueue::PairedReadSupplierFromQueue(ReadSupplierQueue *i_queue, bool i_twoFiles) :
-    queue(i_queue), twoFiles(i_twoFiles), done(false), 
+    queue(i_queue), done(false), twoFiles(i_twoFiles), 
     currentElement(NULL), currentSecondElement(NULL), nextReadIndex(0) {}
 
 PairedReadSupplierFromQueue::~PairedReadSupplierFromQueue()

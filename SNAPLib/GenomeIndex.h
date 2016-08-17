@@ -260,7 +260,7 @@ protected:
 
     struct IndexBuildStats {
         IndexBuildStats() : noBaseAvailable(0), nonSeeds(0), bothComplementsUsed(0), genomeLocationsInOverflowTable(0),
-                            unrecordedSkippedSeeds(0), seedsWithMultipleOccurrences(0) {}
+                            seedsWithMultipleOccurrences(0), unrecordedSkippedSeeds(0) {}
         _int64 noBaseAvailable;
         _int64 nonSeeds;
         _int64 bothComplementsUsed;

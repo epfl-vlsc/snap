@@ -37,10 +37,10 @@ AlignerStats::AlignerStats(AbstractStats* i_extra)
     multiHits(0),
     notFound(0),
     alignedAsPairs(0),
-    extra(i_extra),
     lvCalls(0),
     filtered(0),
-    extraAlignments(0)
+    extraAlignments(0),
+    extra(i_extra)
 {
     for (int i = 0; i <= AlignerStats::maxMapq; i++) {
         mapqHistogram[i] = 0;

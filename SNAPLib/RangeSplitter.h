@@ -94,7 +94,7 @@ private:
 
 class RangeSplittingPairedReadSupplier : public PairedReadSupplier {
 public:
-    RangeSplittingPairedReadSupplier(RangeSplitter *i_splitter, PairedReadReader *i_underlyingReader) : splitter(i_splitter), underlyingReader(i_underlyingReader) {}
+    RangeSplittingPairedReadSupplier(RangeSplitter *i_splitter, PairedReadReader *i_underlyingReader) : underlyingReader(i_underlyingReader), splitter(i_splitter) {}
     virtual ~RangeSplittingPairedReadSupplier();
 
     virtual bool getNextReadPair(Read **read1, Read **read2);

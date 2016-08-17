@@ -50,9 +50,12 @@ IntersectingPairedEndAligner::IntersectingPairedEndAligner(
         bool          noUkkonen_,
         bool          noOrderedEvaluation_,
 		bool          noTruncation_) :
-    index(index_), maxReadSize(maxReadSize_), maxHits(maxHits_), maxK(maxK_), numSeedsFromCommandLine(__min(MAX_MAX_SEEDS,numSeedsFromCommandLine_)), minSpacing(minSpacing_), maxSpacing(maxSpacing_),
-	landauVishkin(NULL), reverseLandauVishkin(NULL), maxBigHits(maxBigHits_), seedCoverage(seedCoverage_),
-    extraSearchDepth(extraSearchDepth_), nLocationsScored(0), noUkkonen(noUkkonen_), noOrderedEvaluation(noOrderedEvaluation_), noTruncation(noTruncation_), 
+    index(index_), maxReadSize(maxReadSize_), maxBigHits(maxBigHits_),
+    extraSearchDepth(extraSearchDepth_), maxK(maxK_),
+    numSeedsFromCommandLine(__min(MAX_MAX_SEEDS, numSeedsFromCommandLine_)),
+    seedCoverage(seedCoverage_), minSpacing(minSpacing_), maxSpacing(maxSpacing_),
+    nLocationsScored(0), noUkkonen(noUkkonen_), noOrderedEvaluation(noOrderedEvaluation_),
+    noTruncation(noTruncation_), landauVishkin(NULL), reverseLandauVishkin(NULL),
     maxSecondaryAlignmentsPerContig(maxSecondaryAlignmentsPerContig_)
 {
     doesGenomeIndexHave64BitLocations = index->doesGenomeIndexHave64BitLocations();
@@ -266,8 +269,6 @@ IntersectingPairedEndAligner::align(
             }
         }
     }
-
-    unsigned thisPassSeedsNotSkipped[NUM_READS_PER_PAIR][NUM_DIRECTIONS] = {{0,0}, {0,0}};
 
     //
     // Initialize the member variables that are effectively stack locals, but are in the object

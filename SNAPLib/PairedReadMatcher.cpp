@@ -72,7 +72,6 @@ private:
     typedef _uint64 StringHash;
     typedef VariableSizeMap<StringHash,Read> ReadMap;
     DataBatch currentBatch; // for dropped reads
-    bool allDroppedInCurrentBatch;
     DataBatch batch[2]; // 0 = current, 1 = previous
     ReadMap unmatched[2]; // read id -> Read
     typedef VariableSizeMap<PairedReadMatcher::StringHash,ReadWithOwnMemory*,150,MapNumericHash<PairedReadMatcher::StringHash>,80,0,true> OverflowMap;
@@ -117,10 +116,8 @@ PairedReadMatcher::PairedReadMatcher(
     ReadReader* i_single,
     bool i_quicklyDropUnpairedReads)
     : single(i_single),
-    overflowTotal(0), overflowPeak(0),
-    quicklyDropUnpairedReads(i_quicklyDropUnpairedReads),
-    nReadsQuicklyDropped(0), freeList(NULL),
-    currentBatch(0, 0), allDroppedInCurrentBatch(false)
+    currentBatch(0, 0), freeList(NULL), overflowTotal(0), overflowPeak(0),
+    quicklyDropUnpairedReads(i_quicklyDropUnpairedReads), nReadsQuicklyDropped(0)
 {
     new (&unmatched[0]) VariableSizeMap<StringHash,Read>(10000);
     new (&unmatched[1]) VariableSizeMap<StringHash,Read>(10000);

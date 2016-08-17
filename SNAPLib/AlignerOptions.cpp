@@ -41,8 +41,18 @@ AlignerOptions::AlignerOptions(
     indexDir(NULL),
     similarityMapFile(NULL),
     numThreads(GetNumberOfProcessors()),
+    // maxDist
+    maxDistFraction(0.0),
+    numSeedsFromCommandLine(0),
+    // seedCoverage
+    seedCountSpecified(false),
+    // maxHits
+    minWeightToCheck(1),
     bindToProcessors(true),
     ignoreMismatchedIDs(false),
+    // outputFile
+    // nInputs
+    // inputs
     clipping(ClipBack),
     sortOutput(false),
     noIndex(false),
@@ -60,9 +70,6 @@ AlignerOptions::AlignerOptions(
     useTimingBarrier(false),
     extraSearchDepth(2),
     defaultReadGroup("FASTQ"),
-    seedCountSpecified(false),
-    minWeightToCheck(1),
-    numSeedsFromCommandLine(0),
     ignoreSecondaryAlignments(true),
     maxSecondaryAlignmentAdditionalEditDistance(-1),
 	maxSecondaryAlignments(0x7fffffff),
@@ -73,7 +80,6 @@ AlignerOptions::AlignerOptions(
     noOrderedEvaluation(false),
 	noTruncation(false),
 	minReadLength(DEFAULT_MIN_READ_LENGTH),
-    maxDistFraction(0.0),
 	mapIndex(false),
 	prefetchIndex(false),
     writeBufferSize(16 * 1024 * 1024)

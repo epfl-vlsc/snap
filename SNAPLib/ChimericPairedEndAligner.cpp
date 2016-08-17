@@ -55,7 +55,7 @@ ChimericPairedEndAligner::ChimericPairedEndAligner(
 	   unsigned				minReadLength_,
        int                  maxSecondaryAlignmentsPerContig,
         BigAllocator        *allocator)
-		: underlyingPairedEndAligner(underlyingPairedEndAligner_), forceSpacing(forceSpacing_), index(index_), minReadLength(minReadLength_)
+		: forceSpacing(forceSpacing_), underlyingPairedEndAligner(underlyingPairedEndAligner_), index(index_), minReadLength(minReadLength_)
 {
     // Create single-end aligners.
     singleAligner = new (allocator) BaseAligner(index, maxHits, maxK, maxReadSize,

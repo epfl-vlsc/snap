@@ -123,7 +123,7 @@ private:
     const Genome *  genome;
     GenomeDistance  genomeSize;
     unsigned        maxReadSize;
-    unsigned        maxHits;
+    //    unsigned        maxHits;
     unsigned        maxBigHits;
     unsigned        extraSearchDepth;
     unsigned        maxK;

@@ -53,11 +53,11 @@ AlignerContext::AlignerContext(int i_argc, const char **i_argv, const char *i_ve
     options(NULL),
     stats(NULL),
     extension(i_extension != NULL ? i_extension : new AlignerExtension()),
-    readWriter(NULL),
     argc(i_argc),
     argv(i_argv),
     version(i_version),
-    perfFile(NULL)
+    perfFile(NULL),
+    readWriter(NULL)
 {
 }
 
@@ -235,7 +235,7 @@ AlignerContext::beginIteration()
     typeSpecificBeginIteration();
 
     if (UnknownFileType != options->outputFile.fileType) {
-        const FileFormat* format;
+        const FileFormat* format = NULL;
         if (SAMFile == options->outputFile.fileType) {
             format = FileFormat::SAM[options->useM];
         } else if (BAMFile == options->outputFile.fileType) {

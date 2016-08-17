@@ -119,9 +119,9 @@ FileEncoder::FileEncoder(
     bool bindToProcessors,
     ParallelWorkerManager* i_manager)
     :
-    encoderRunning(false),
     coworker(numThreads == 0 ? NULL
-        : new ParallelCoworker(numThreads, bindToProcessors, i_manager, FileEncoder::outputReadyCallback, this))
+        : new ParallelCoworker(numThreads, bindToProcessors, i_manager, FileEncoder::outputReadyCallback, this)),
+    encoderRunning(false)
 {}
 
     void
@@ -265,11 +265,11 @@ AsyncDataWriter::AsyncDataWriter(
     FileEncoder* i_encoder)
     :
     DataWriter(i_filter),
-    encoder(i_encoder),
-    supplier(i_supplier),
     count(i_count),
     bufferSize(i_bufferSize),
-    current(0)
+    supplier(i_supplier),
+    current(0),
+    encoder(i_encoder)
 {
     _ASSERT(count >= 2);
     char* block = (char*) BigAlloc(count * bufferSize);

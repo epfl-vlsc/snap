@@ -658,7 +658,6 @@ SAMReader::createReadSupplierGenerator(
         queue->startReaders();
         return queue;
     } else {
-        RangeSplitter *splitter = new RangeSplitter(QueryFileSize(fileName), numThreads, 100);
         return new RangeSplittingReadSupplierGenerator(fileName, true, numThreads, context);
     }
 }
@@ -1027,7 +1026,6 @@ SAMFormat::createSAMLine(
 {
     contigName = "*";
     positionInContig = 0;
-    const char *cigar = "*";
     templateLength = 0;
 
     if (secondaryAlignment) {
@@ -1079,7 +1077,6 @@ SAMFormat::createSAMLine(
       basesClippedAfter = fullLength - clippedLength - basesClippedBefore;
     }
 
-    int editDistance = -1;
     if (genomeLocation != InvalidGenomeLocation) {
         if (direction == RC) {
             flags |= SAM_REVERSE_COMPLEMENT;

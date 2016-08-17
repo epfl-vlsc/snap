@@ -156,7 +156,6 @@ public:
     const char* p = pattern;
     const char* t = text;
     int end = __min(patternLen, textLen);
-    const char* pend = pattern + end;
 
     L(0, 0) = countPerfectMatch(p, t, end);
 
@@ -189,7 +188,6 @@ public:
             const char* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
             if (*p == *t && best >= 0) {
                 int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
 
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
@@ -200,7 +198,6 @@ public:
             t = (text + d * TEXT_DIRECTION) + left * TEXT_DIRECTION;
             if (*p == *t && left >= 0) {
                 int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
 
                 left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
@@ -215,7 +212,6 @@ public:
             t = (text + d * TEXT_DIRECTION) + right * TEXT_DIRECTION;
             if (*p == *t && right >= 0) {
                 int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
 
                 right += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }

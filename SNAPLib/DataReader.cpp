@@ -164,12 +164,22 @@ ReadBasedDataReader::ReadBasedDataReader(
     _int64 i_overflowBytes,
     double extraFactor,
     size_t i_bufferSpace)
-    : DataReader(), nBuffers(i_nBuffers), overflowBytes(i_overflowBytes),
+    : DataReader(),
+    nBuffers(i_nBuffers), 
     maxBuffers(i_nBuffers * (i_nBuffers == 1 ? 2 : 4)),
-    bufferSize(i_bufferSpace > 0 ? i_bufferSpace / (i_nBuffers * 2) : BUFFER_SIZE),
-	headerBuffer(NULL), headerBufferSize(0), amountAdvancedThroughUnderlyingStoreByUs(0), 
-	headerExtra(NULL), headerExtraSize(0), startedReadingHeader(false), headerBuffersOutstanding(0), nHeaderBuffersAllocated(0),
-	hitEOFReadingHeader(false)
+    headerBuffersOutstanding(0),
+    startedReadingHeader(false),
+    // extraBytes
+    overflowBytes(i_overflowBytes),
+    // bufferInfo
+    headerBuffer(NULL),
+    headerBufferSize(0),
+    headerExtra(NULL),
+    headerExtraSize(0),
+    amountAdvancedThroughUnderlyingStoreByUs(0),
+    nHeaderBuffersAllocated(0),
+    hitEOFReadingHeader(false),
+    bufferSize(i_bufferSpace > 0 ? i_bufferSpace / (i_nBuffers * 2) : BUFFER_SIZE)
 {
     //
     // Initialize the buffer info struct.
@@ -794,8 +804,8 @@ private:
 };
 
 StdioDataReader::StdioDataReader(unsigned i_nBuffers, _int64 i_overflowBytes, double extraFactor) :
-    ReadBasedDataReader(i_nBuffers, i_overflowBytes, extraFactor), started(false), hitEOF(false), overflowBufferFilled(false),
-    readOffset(0), overflowBuffer(NULL)
+    ReadBasedDataReader(i_nBuffers, i_overflowBytes, extraFactor), overflowBuffer(NULL),
+    overflowBufferFilled(false), started(false), hitEOF(false), readOffset(0)
 {
 }
 
@@ -1401,9 +1411,10 @@ DecompressDataReader::DecompressDataReader(
     _int64 i_extraBytes,
     _int64 i_overflowBytes,
     int i_chunkSize)
-    : DataReader(), inner(i_inner), count(i_count), offset(i_overflowBytes),
-    totalExtra(i_totalExtra), extraBytes(i_extraBytes), overflowBytes(i_overflowBytes),
-    chunkSize(i_chunkSize), threadStarted(false), eof(false), stopping(false)
+    : DataReader(), inner(i_inner),
+    extraBytes(i_extraBytes), overflowBytes(i_overflowBytes), totalExtra(i_totalExtra),
+    chunkSize(i_chunkSize), offset(i_overflowBytes), threadStarted(false), eof(false),
+    stopping(false), count(i_count)
 {
     entries = new Entry[count];
     for (int i = 0; i < count; i++) {
@@ -1636,7 +1647,6 @@ DecompressDataReader::decompress(
     }
     uInt oldAvailOut, oldAvailIn;
     int block = 0;
-    bool multiBlock = true;
     int status;
     do {
         if (mode != ContinueMultiBlock || block != 0) {
@@ -1774,7 +1784,7 @@ DecompressDataReader::decompressThread(
         }
         // always starts with a fresh batch - advances after reading it all
         bool ok = reader->inner->getData(&entry->compressed, &entry->compressedValid, &entry->compressedStart);
-        int index = (int) (entry - reader->entries);
+        //int index = (int) (entry - reader->entries);
         if (! ok) {
             //fprintf(stderr, "decompressThread #%d %d:%d eof\n", index, reader->inner->getBatch().fileID, reader->inner->getBatch().batchID);
             if (! reader->inner->isEOF()) {
@@ -1851,7 +1861,7 @@ DecompressDataReader::decompressThreadContinuous(
         }
         // always starts with a fresh batch - advances after reading it all
         bool ok = reader->inner->getData(&entry->compressed, &entry->compressedValid, &entry->compressedStart);
-        int index = (int) (entry - reader->entries);
+        //int index = (int) (entry - reader->entries);
         if (! ok) {
             //fprintf(stderr, "decompressThreadContinuous#%d %d:%d eof\n", index, reader->inner->getBatch().fileID, reader->inner->getBatch().batchID);
             if (! reader->inner->isEOF()) {
@@ -2139,18 +2149,9 @@ private:
 
 MemMapDataReader::MemMapDataReader(MemMapDataSupplier* i_supplier, int i_batchCount, _int64 i_batchSize, _int64 i_overflowBytes, _int64 i_batchExtra)
     : DataReader(),
-    batchCount(i_batchCount),
-        batchSizeParam(i_batchSize),
-        overflowBytes(i_overflowBytes),
-        batchExtra(i_batchExtra),
-        currentBatch(1),
-        extraUsed(0),
-        currentMap(NULL),
-        currentMapOffset(0),
-        currentMapSize(0),
-        currentExtraIndex(0),
-        supplier(i_supplier),
-        mapper(NULL)
+    batchCount(i_batchCount), batchSizeParam(i_batchSize), overflowBytes(i_overflowBytes),
+    batchExtra(i_batchExtra), currentMap(NULL), currentMapOffset(0), currentMapSize(0),
+    extraUsed(0), currentExtraIndex(0), currentBatch(1), supplier(i_supplier), mapper(NULL)
 {
     _ASSERT(batchCount > 0 && batchSizeParam >= 0 && batchExtra >= 0);
     if (batchExtra > 0) {
@@ -2223,7 +2224,6 @@ MemMapDataReader::reinit(
     if (currentMap != NULL) {
         mapper->unmap(currentMappedBase);
     }
-    _int64 oldAmount = amountOfFileToProcess;
     _int64 startSize = amountOfFileToProcess == 0 ? fileSize - i_startingOffset
         : max((_int64) 0, min(fileSize - i_startingOffset, amountOfFileToProcess));
     amountOfFileToProcess = max((_int64)0, min(startSize + overflowBytes, fileSize - i_startingOffset));

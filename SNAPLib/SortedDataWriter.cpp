@@ -57,7 +57,7 @@ struct SortBlock
 #ifdef VALIDATE_SORT
     SortBlock() : start(0), bytes(0), location(0), length(0), reader(NULL), minLocation(0), maxLocation(0) {}
 #else
-    SortBlock() : start(0), bytes(0), location(0), length(0), reader(NULL) {}
+    SortBlock() : start(0), bytes(0), reader(NULL), location(0), length(0) {}
 #endif
 	SortBlock(const SortBlock& other) { *this = other; }
     void operator=(const SortBlock& other);
@@ -125,16 +125,16 @@ public:
         size_t i_bufferSpace,
         FileEncoder* i_encoder = NULL)
         :
-        format(i_fileFormat),
-        genome(i_genome),
         FilterSupplier(DataWriter::CopyFilter),
-        encoder(i_encoder),
+        genome(i_genome),
+        format(i_fileFormat),
         tempFileName(i_tempFileName),
         sortedFileName(i_sortedFileName),
         sortedFilterSupplier(i_sortedFilterSupplier),
+        encoder(i_encoder),
+        blocks(),
         bufferSize(i_bufferSize),
-        bufferSpace(i_bufferSpace),
-        blocks()
+        bufferSpace(i_bufferSpace)
     {
         InitializeExclusiveLock(&lock);
     }
@@ -217,7 +217,9 @@ SortedDataFilter::onNextBatch(
         soft_exit(1);
     }
     size_t target = 0;
+#ifdef VALIDATE_SORT
 	GenomeLocation previous = 0;
+#endif
     for (VariableSizeVector<SortEntry>::iterator i = locations.begin(); i != locations.end(); i++) {
 #ifdef VALIDATE_SORT
 		if (locations.size() > 1) { // skip header block
@@ -239,8 +241,8 @@ SortedDataFilter::onNextBatch(
     if (header > 0) {
         parent->setHeaderSize(header);
     }
-	int first = offset == 0;
 #ifdef VALIDATE_SORT
+	int first = offset == 0;
 	GenomeLocation minLocation = locations.size() > first ? locations[first].location : 0;
     GenomeLocation maxLocation = locations.size() > first ? locations[locations.size() - 1].location : UINT32_MAX;
     parent->addBlock(offset + header, bytes - header, minLocation, maxLocation);
@@ -391,7 +393,9 @@ SortedDataFilterSupplier::mergeSort()
         queue.add((_uint32) (b - blocks.begin()), b->location); 
     }
     GenomeLocation current = 0; // current location for validation
+#if VALIDATE_SORT
 	int lastRefID = -1, lastPos = 0;
+#endif
     while (queue.size() > 0) {
 #if VALIDATE_SORT
         GenomeLocation check;
@@ -455,7 +459,9 @@ SortedDataFilterSupplier::mergeSort()
                     break;
                 }
             }
+#ifdef DEBUG
             GenomeLocation previous = b->location;
+#endif
             format->getSortInfo(genome, b->data, readBytes, &b->location, &b->length);
             _ASSERT(b->length <= readBytes && b->location >= previous);
         }

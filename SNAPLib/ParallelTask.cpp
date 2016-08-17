@@ -21,7 +21,7 @@ Environment:
 using std::max;
 
 ParallelCoworker::ParallelCoworker(int i_numThreads, bool i_bindToProcessors, ParallelWorkerManager* i_manager, Callback i_callback, void* i_parameter)
-    : stopped(false), numThreads(i_numThreads), bindToProcessors(i_bindToProcessors), manager(i_manager), callback(i_callback), parameter(i_parameter)
+    : manager(i_manager), stopped(false), numThreads(i_numThreads), bindToProcessors(i_bindToProcessors), callback(i_callback), parameter(i_parameter)
 {
     workReady = new EventObject[numThreads];
     workDone = new EventObject[numThreads];
@@ -110,7 +110,7 @@ WorkerContext::runThread()
             return;
         }
         //fprintf(stderr, "worker task thread %d begin\n", GetCurrentThreadId());
-        _int64 start = timeInMillis();
+        //_int64 start = timeInMillis();
         shared->workers[threadNum]->step();
         //fprintf(stderr, "zip task thread %d done %lld ms\n", GetCurrentThreadId(), timeInMillis() - start);
         AllowEventWaitersToProceed(&shared->workDone[threadNum]);

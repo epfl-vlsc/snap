@@ -82,7 +82,6 @@ bool RangeSplitter::getNextRange(_int64 *rangeStart, _int64 *rangeLength)
     }
 
     _ASSERT(amountToTake > 0);
-	_int64 oldPosition = position; // for debugging
     _int64 startOffset = InterlockedAdd64AndReturnNewValue(&position, amountToTake) - amountToTake;
 	_ASSERT(position >= rangeBegin);
     if (startOffset >= rangeEnd) {
@@ -105,7 +104,7 @@ RangeSplittingReadSupplierGenerator::RangeSplittingReadSupplierGenerator(
     bool i_isSAM, 
     unsigned i_numThreads,
     const ReaderContext& i_context)
-    : isSAM(i_isSAM), context(i_context), numThreads(i_numThreads)
+    : isSAM(i_isSAM), numThreads(i_numThreads), context(i_context)
 {
     fileName = new char[strlen(i_fileName) + 1];
     strcpy(fileName, i_fileName);
@@ -205,7 +204,7 @@ RangeSplittingPairedReadSupplier::getNextReadPair(Read **read1, Read **read2)
 RangeSplittingPairedReadSupplierGenerator::RangeSplittingPairedReadSupplierGenerator(
     const char *i_fileName1, const char *i_fileName2, FileType i_fileType, unsigned i_numThreads, 
     bool i_quicklyDropUnpairedReads, const ReaderContext& i_context) :
-        fileType(i_fileType), numThreads(i_numThreads), context(i_context), quicklyDropUnpairedReads(i_quicklyDropUnpairedReads)
+    numThreads(i_numThreads), fileType(i_fileType), context(i_context), quicklyDropUnpairedReads(i_quicklyDropUnpairedReads)
 {
     _ASSERT(strcmp(i_fileName1, "-") && (NULL == i_fileName2 || strcmp(i_fileName2, "-"))); // Can't use range splitter on stdin, because you can't seek or query size
     fileName1 = new char[strlen(i_fileName1) + 1];
@@ -236,7 +235,7 @@ RangeSplittingPairedReadSupplierGenerator::generateNewPairedReadSupplier()
         return NULL;
     }
 
-    PairedReadReader *underlyingReader;
+    PairedReadReader *underlyingReader = NULL;
     switch (fileType) {
     case SAMFile:
          underlyingReader = SAMReader::createPairedReader(DataSupplier::Default, fileName1, 2, rangeStart, rangeLength, quicklyDropUnpairedReads, context);

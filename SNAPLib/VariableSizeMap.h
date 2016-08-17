@@ -47,7 +47,7 @@ class VariableSizeMapBase
 {
 protected:
     VariableSizeMapBase(int i_capacity = 16)
-        : entries(NULL), count(0), capacity(i_capacity), occupied(0)
+        : entries(NULL), capacity(i_capacity), count(0), occupied(0)
     {
         reserve(max(16,i_capacity));
     }

@@ -83,7 +83,7 @@ void BigDealloc(void *memory);
 class BigAllocator {
 public:
     BigAllocator(size_t i_maxMemory, size_t i_allocationGranularity = 8);
-    ~BigAllocator();
+    virtual ~BigAllocator();
 
     virtual void *allocate(size_t amountToAllocate);
 
@@ -118,7 +118,7 @@ private:
 class CountingBigAllocator : public BigAllocator
 {
 public:
-    CountingBigAllocator(size_t i_allocationGranularity = 8) :size(0), allocations(NULL), BigAllocator(0), allocationGranularity(i_allocationGranularity) {}
+ CountingBigAllocator(size_t i_allocationGranularity = 8) : BigAllocator(0), size(0), allocationGranularity(i_allocationGranularity), allocations(NULL) {}
     ~CountingBigAllocator();
 
     virtual void *allocate(size_t amountToAllocate);

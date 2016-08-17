@@ -63,10 +63,10 @@ BaseAligner::BaseAligner(
     BigAllocator   *allocator) :
         genomeIndex(i_genomeIndex), maxHitsToConsider(i_maxHitsToConsider), maxK(i_maxK),
         maxReadSize(i_maxReadSize), maxSeedsToUseFromCommandLine(i_maxSeedsToUseFromCommandLine),
-        maxSeedCoverage(i_maxSeedCoverage), readId(-1), extraSearchDepth(i_extraSearchDepth),
-        explorePopularSeeds(false), stopOnFirstHit(false), stats(i_stats), 
-        noUkkonen(i_noUkkonen), noOrderedEvaluation(i_noOrderedEvaluation), noTruncation(i_noTruncation),
-		minWeightToCheck(max(1u, i_minWeightToCheck)), maxSecondaryAlignmentsPerContig(i_maxSecondaryAlignmentsPerContig)
+        maxSeedCoverage(i_maxSeedCoverage), minWeightToCheck(max(1u, i_minWeightToCheck)),
+        extraSearchDepth(i_extraSearchDepth), noUkkonen(i_noUkkonen), noOrderedEvaluation(i_noOrderedEvaluation),
+		noTruncation(i_noTruncation), maxSecondaryAlignmentsPerContig(i_maxSecondaryAlignmentsPerContig),
+        readId(-1), explorePopularSeeds(false), stopOnFirstHit(false), stats(i_stats)
 /*++
 
 Routine Description:

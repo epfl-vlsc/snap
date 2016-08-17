@@ -50,7 +50,4 @@ private:
         int shift;
         int gapStatus;
     };
-
-    // Previous state in our dynamic program, for backtracking to print CIGAR strings
-    State prev[MAX_READ][2*MAX_SHIFT+1][3];   // [readPos][shift][gapStatus]
 };

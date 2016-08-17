@@ -33,8 +33,8 @@ Revision History:
 #include "Util.h"
 
 Genome::Genome(GenomeDistance i_maxBases, GenomeDistance nBasesStored, unsigned i_chromosomePadding, unsigned i_maxContigs)
-: maxBases(i_maxBases), minLocation(0), maxLocation(i_maxBases), chromosomePadding(i_chromosomePadding), maxContigs(i_maxContigs),
-  mappedFile(NULL)
+: maxBases(i_maxBases), minLocation(0), maxLocation(i_maxBases), maxContigs(i_maxContigs),
+  chromosomePadding(i_chromosomePadding), mappedFile(NULL)
 {
     bases = ((char *) BigAlloc(nBasesStored + 2 * N_PADDING)) + N_PADDING;
     if (NULL == bases) {

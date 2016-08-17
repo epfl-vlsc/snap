@@ -315,8 +315,6 @@ SimpleReadWriter::writePairs(
         size_t size;
         size_t used = 0;
 
-        bool fitInBuffer = true;
-
         if (!writer->getBuffer(&buffer, &size)) {
             goto done;
         }

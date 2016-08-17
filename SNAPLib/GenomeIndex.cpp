@@ -845,7 +845,9 @@ SNAPHashTable** GenomeIndex::allocateHashTables(
 
 
 
-GenomeIndex::GenomeIndex() : nHashTables(0), hashTables(NULL), overflowTable32(NULL), overflowTable64(NULL), genome(NULL), tablesBlob(NULL), mappedOverflowTable(NULL), mappedTables(NULL)
+GenomeIndex::GenomeIndex() : nHashTables(0), genome(NULL), overflowTable32(NULL),
+                             overflowTable64(NULL), mappedOverflowTable(NULL), tablesBlob(NULL),
+                             mappedTables(NULL), hashTables(NULL)
 {
 }
 
@@ -1167,7 +1169,6 @@ GenomeIndex::BuildHashTablesWorkerThreadMain(void *param)
     void
 GenomeIndex::BuildHashTablesWorkerThread(BuildHashTablesThreadContext *context)
 {
-    GenomeDistance countOfBases = context->genome->getCountOfBases();
     const Genome *genome = context->genome;
     unsigned seedLen = context->seedLen;
 	bool large = context->large;

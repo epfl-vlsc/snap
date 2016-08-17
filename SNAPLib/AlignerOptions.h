@@ -56,6 +56,8 @@ struct SNAPFile {
 
 struct AlignerOptions : public AbstractOptions
 {
+    virtual ~AlignerOptions() { }
+    
     AlignerOptions(const char* i_commandLine, bool forPairedEnd = false);
 
     const char         *commandLine;

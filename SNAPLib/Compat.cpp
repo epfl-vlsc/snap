@@ -1299,7 +1299,10 @@ _int64 QueryFileSize(const char *fileName)
     int fd = open(fileName, O_RDONLY);
     _ASSERT(fd != -1);
     struct stat sb;
-    int r = fstat(fd, &sb);
+#ifdef DEBUG
+    int r =
+#endif
+        fstat(fd, &sb);
     _ASSERT(r != -1);
     _int64 fileSize = sb.st_size;
     close(fd);
@@ -1697,10 +1700,6 @@ public:
     
     private:
         OsxAsyncFile*       file;
-        bool                writing;
-        SingleWaiterObject  ready;
-        struct aiocb        aiocb;
-        size_t*             result;
     };
 
     virtual AsyncFile::Writer* getWriter();
@@ -1718,8 +1717,6 @@ public:
     
     private:
         OsxAsyncFile*       file;
-        bool                reading;
-        size_t*             result;
     };
 
     virtual AsyncFile::Reader* getReader();
@@ -1760,7 +1757,7 @@ OsxAsyncFile::getWriter()
 }
 
 OsxAsyncFile::Writer::Writer(OsxAsyncFile* i_file)
-    : file(i_file), writing(false)
+    : file(i_file)
 {
 }
 
@@ -1802,7 +1799,7 @@ OsxAsyncFile::getReader()
 
 OsxAsyncFile::Reader::Reader(
     OsxAsyncFile* i_file)
-    : file(i_file), reading(false)
+    : file(i_file)
 {
 }
 
@@ -1903,7 +1900,10 @@ FileMapper::createMapping(size_t offset, size_t amountToMap, void** o_token)
 	    return NULL;
     }
 
-    int r = madvise(mappedBase, min((size_t) madviseSize, amountToMap + beginRounding), MADV_WILLNEED | MADV_SEQUENTIAL);
+#ifdef DEBUG
+    int r =
+#endif
+        madvise(mappedBase, min((size_t) madviseSize, amountToMap + beginRounding), MADV_WILLNEED | MADV_SEQUENTIAL);
     _ASSERT(r == 0);
     lastPosMadvised = 0;
 
@@ -1917,7 +1917,10 @@ FileMapper::unmap(void* i_token)
 {
     _ASSERT(mapCount > 0);
     if (mapCount > 0) {
-        int n = InterlockedDecrementAndReturnNewValue(&mapCount);
+#ifdef DEBUG
+        int n =
+#endif
+            InterlockedDecrementAndReturnNewValue(&mapCount);
         _ASSERT(n >= 0);
         UnmapToken* token = (UnmapToken*) i_token;
         munmap(token->first, token->second);

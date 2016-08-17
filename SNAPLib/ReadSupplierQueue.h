@@ -193,7 +193,6 @@ public:
 private:
     bool                done;
     ReadSupplierQueue   *queue;
-    bool                outOfReads;
     ReadQueueElement    *currentElement;
     int                 nextReadIndex;          
 };

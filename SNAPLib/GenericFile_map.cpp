@@ -35,7 +35,7 @@ GenericFile_map *GenericFile_map::open(const char *filename)
 	return new GenericFile_map(mappedFile, contents, fileSize);
 }
 
-GenericFile_map::GenericFile_map(MemoryMappedFile *i_mappedFile, void *i_contents, size_t i_fileSize) : mappedFile(i_mappedFile), contents((const char *)i_contents), fileSize(i_fileSize), GenericFile_Blob(i_contents, i_fileSize)
+GenericFile_map::GenericFile_map(MemoryMappedFile *i_mappedFile, void *i_contents, size_t i_fileSize) : GenericFile_Blob(i_contents, i_fileSize), mappedFile(i_mappedFile), contents((const char *)i_contents), fileSize(i_fileSize)
 {
 }
 
@@ -59,7 +59,6 @@ GenericFile_map::~GenericFile_map()
 GenericFile_map::prefetch()
 {
     AdviseMemoryMappedFilePrefetch(mappedFile);
-	int pageSize = getpagesize();
 
 	_int64 total = 0;
 
