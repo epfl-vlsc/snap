@@ -35,6 +35,7 @@ Revision History:
 #include "exit.h"
 #include "AlignerOptions.h"
 #include "Error.h"
+#include <iostream>
 
 using std::min;
 
@@ -96,6 +97,7 @@ Arguments:
 
  --*/
 {
+    total_lv_calls = 0;
     hadBigAllocator = allocator != NULL;
 
     nHashTableLookups = 0;
@@ -884,6 +886,7 @@ Return Value:
                     _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
 
                     int textLen = (int)__min(genomeDataLength - tailStart, 0x7ffffff0);
+                    total_lv_calls++;
                     score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, readToScore->getData() + tailStart, readToScore->getQuality() + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
 
@@ -896,6 +899,7 @@ Return Value:
                         score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, reversedRead[elementToScore->direction] + readLen - seedOffset,
                                                                                     read[OppositeDirection(elementToScore->direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
                                                                                     &genomeLocationOffset);
+                        total_lv_calls++;
 
                         if (score2 == -1) {
                             score = -1;
@@ -1356,6 +1360,7 @@ Return Value:
             hitsPerContigCounts = NULL;
         }
     }
+    std::cout << " total LV calls: " << total_lv_calls << std::endl;
 }
 
 BaseAligner::HashTableElement::HashTableElement()
