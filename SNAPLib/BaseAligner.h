@@ -114,7 +114,6 @@ public:
 
 private:
 
-    _uint64 total_lv_calls;
     bool hadBigAllocator;
 
     LandauVishkin<> *landauVishkin;
