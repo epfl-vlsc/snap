@@ -18,5 +18,5 @@ prep_dir() {
 
 prep_dir
 
-../snap-aligner single $ref_index_path -t $num_threads -compressedFastq $input_path -o $output_path &
+$DIR/../snap-aligner single $ref_index_path -t $num_threads -compressedFastq $input_path -o $output_path &
 echo $! > pid && pidstat -hrdu -p `cat pid` 1 | sed '1d;/^[#]/{4,$d};/^[#]/s/^[#][ ]*//;/^$/d;s/^[ ]*//;s/[ ]\+/,/g' > pidstat_$num_threads.csv && rm pid
