@@ -10,10 +10,10 @@ output_path=/single_data/output.sam
 flush_path=$DIR/../../tf-align/util/flush-cache.sh
 
 prep_dir() {
+    [ -e $output_path ] && rm $output_path
     make -C $DIR/..
     sudo $flush_path -p
     parallel "cat {} >/dev/null" ::: $ref_index_path/*
-    [ -e $output_path] && rm $output_path
 }
 
 prep_dir
