@@ -367,8 +367,9 @@ private:
       // TODO: move the constant outside the function
       const char *pBase = p;
 	    const char *pend = p + availBytes;
-
-/*      while (true) {
+/*
+      // SNAP original version
+      while (true) {
 		    _uint64 x;
 		    if (TEXT_DIRECTION == 1) {
 			    x = *((_uint64*)p) ^ *((_uint64*)t);
@@ -394,8 +395,9 @@ private:
 	    } // while true
 */
 
-	    /*
-      const __m64 bswap_mask = _mm_setr_pi8(7, 6, 5, 4, 3, 2, 1, 0);
+/*	    
+      // Processing 64 bits at a time
+      static const __m64 bswap_mask = _mm_setr_pi8(7, 6, 5, 4, 3, 2, 1, 0);
       for (int i = 0; i < availBytes; i++) {
 		    _uint64 x;
 		    // TODO: check if the conditional branch matters
@@ -434,8 +436,9 @@ private:
 */
 
 
-//	    const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-	    const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
+	    
+      // Processing 128 bits at a time
+      static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
       int nr_steps = availBytes / 2 + 1;
 
       for (int i = 0; i < nr_steps; i++) {
@@ -444,8 +447,6 @@ private:
         if (TEXT_DIRECTION == 1) {
           x = *((unsigned __int128*)p) ^ *((unsigned __int128*)t);
 		    } else {
-          char C = *(t - 15);
-          std::cout << C << std::endl;
 
           _uint64 T1 = *(_uint64*)(t - 7);
           _uint64 T2 = *(_uint64*)(t - 15);
@@ -456,13 +457,6 @@ private:
           
 			    x = *((unsigned __int128*)p) ^ tSwap;
 		    }
-
-//		    if (x) {
-//			    unsigned long zeroes;
-//			    CountTrailingZeroes(x, zeroes);
-//			    zeroes >>= 3;
-//			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
-//		    } // if (x)
 
         _uint64 lo;
         
