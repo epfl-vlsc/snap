@@ -3,6 +3,7 @@
 #include "BigAlloc.h"
 #include "exit.h"
 #include "Genome.h"
+#include "tmmintrin.h"
 
 const int MAX_K = 63;
 
@@ -55,6 +56,7 @@ template<int TEXT_DIRECTION = 1> class LandauVishkin {
 //
 #define L(e,d)			L_zero			[(e) * (2 * MAX_K + 1) + (d)]
 #define A(e,d)			A_zero			[(e) * (2 * MAX_K + 1) + (d)]
+#define MASK_128_LO 0x0000000000000000FFFFFFFFFFFFFFFF
 
 public:
     LandauVishkin()
@@ -362,9 +364,11 @@ private:
     //
     inline int countPerfectMatch(const char *& p, const char *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
-	    const char *pBase = p;
+      // TODO: move the constant outside the function
+      const char *pBase = p;
 	    const char *pend = p + availBytes;
-	    while (true) {
+
+/*      while (true) {
 		    _uint64 x;
 		    if (TEXT_DIRECTION == 1) {
 			    x = *((_uint64*)p) ^ *((_uint64*)t);
@@ -388,14 +392,108 @@ private:
 
 		    t += 8 * TEXT_DIRECTION;
 	    } // while true
+*/
+
+	    /*
+      const __m64 bswap_mask = _mm_setr_pi8(7, 6, 5, 4, 3, 2, 1, 0);
+      for (int i = 0; i < availBytes; i++) {
+		    _uint64 x;
+		    // TODO: check if the conditional branch matters
+        if (TEXT_DIRECTION == 1) {
+          // only for debugging, gdb doesn't know about unsigned __int128 
+          // unsigned __int128 p_conv = *((unsigned __int128*)p);
+          // unsigned __int128 t_conv = *((unsigned __int128*)t);
+			    // x = p_conv ^ t_conv;
+          x = *((_uint64*)p) ^ *((_uint64*)t);
+		    } else {
+          _uint64 T __attribute__((aligned(16))) = *(_uint64*)(t - 7);
+
+          __m64 T_reg = *((__m64*)(&T));
+
+          __m64 tSwap_reg = _mm_shuffle_pi8(T_reg, bswap_mask);
+			    
+          _uint64 tSwap = *((_uint64*)&tSwap_reg);
+          
+			    x = *((_uint64*)p) ^ tSwap;
+		    }
+
+		    if (x) {
+			    unsigned long zeroes;
+			    CountTrailingZeroes(x, zeroes);
+			    zeroes >>= 3;
+			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
+		    } // if (x)
+
+		    p += 8;
+		    if (p >= pend) {
+			    return availBytes;
+		    }
+
+		    t += 8 * TEXT_DIRECTION;
+	    }
+*/
+
+
+//	    const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+	    const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
+      int nr_steps = availBytes / 2 + 1;
+
+      for (int i = 0; i < nr_steps; i++) {
+		    unsigned __int128 x;
+		    // TODO: check if the conditional branch matters
+        if (TEXT_DIRECTION == 1) {
+          x = *((unsigned __int128*)p) ^ *((unsigned __int128*)t);
+		    } else {
+          char C = *(t - 15);
+          std::cout << C << std::endl;
+
+          _uint64 T1 = *(_uint64*)(t - 7);
+          _uint64 T2 = *(_uint64*)(t - 15);
+          __m128i T_reg = _mm_set_epi64x(T2, T1);
+
+          __m128i tSwap_reg = _mm_shuffle_epi8(T_reg, bswap_mask);
+			    unsigned __int128 tSwap = *((unsigned __int128*)&tSwap_reg);
+          
+			    x = *((unsigned __int128*)p) ^ tSwap;
+		    }
+
+//		    if (x) {
+//			    unsigned long zeroes;
+//			    CountTrailingZeroes(x, zeroes);
+//			    zeroes >>= 3;
+//			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
+//		    } // if (x)
+
+        _uint64 lo;
+        
+        if ((lo = x & MASK_128_LO) != 0) { // testing the low 64b
+          _uint64 zeroes;
+          CountTrailingZeroes(lo, zeroes);
+          zeroes >>= 3;
+			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
+        } else if (x) { // testing the hi 64b
+          _uint64 hi = x >> 64;
+          _uint64 zeroes;
+          CountTrailingZeroes(hi, zeroes);
+          zeroes >>= 3;
+          zeroes += 8; // the lower 64 bits were all zero
+			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
+        }
+
+		    p += 16;
+		    if (p >= pend) {
+			    return availBytes;
+		    }
+
+		    t += 16 * TEXT_DIRECTION;
+	    }
 
 	    return 0;
     }
 
-
     //
     // Table of d values for the inner loop in computeEditDistance.  This allows us to avoid the line d = (d > 0 ? -d : -d+1), which causes
-    // a branch misprediction every time.
+    // a branch misprediction *((unsigned __int128*)p) ^ *((unsigned __int128*)t);every time.
     //
     int dTable[2 * (MAX_K + 1) + 1];
     
