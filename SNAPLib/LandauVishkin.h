@@ -76,6 +76,9 @@ public:
     for (int i = 0, d = 0; i < 2 * (MAX_K + 1) + 1; i++, d = (d > 0 ? -d : -d+1)) {
         dTable[i] = d;
     }
+    e_loop = 0;
+    d_loop = 0;
+    perfect_matches = 0;
 }
 /*
     void pushBackCacheStats()
@@ -88,8 +91,11 @@ public:
     static size_t getBigAllocatorReservation() {return sizeof(LandauVishkin<TEXT_DIRECTION>);} // maybe we should worry about allocating the cache with a BigAllocator, but not for now.
 
     ~LandauVishkin()
-{
-}
+    {
+      std::cout << "e loop: " << e_loop << std::endl;
+      std::cout << "d loop: " << d_loop << std::endl;
+      std::cout << "pf match: " << perfect_matches << std::endl;
+    }
 
     // Compute the edit distance between two strings, if it is <= k, or return -1 otherwise.
 
@@ -177,10 +183,12 @@ public:
 	int e;
 
     for (e = 1; e <= k; e++) {
+        e_loop++;
         // Search d's in the order 0, 1, -1, 2, -2, etc to find an alignment with as few indels as possible.
         // dTable is just precomputed d = (d > 0 ? -d : -d+1) to save the branch misprediction from (d > 0)
         int i =0;
         for (d = 0; d != e+1 ; i++, d = dTable[i]) {
+            d_loop++;
             int best = L(e-1, d) + 1; // up
             A(e, d) = 'X';
 
@@ -355,6 +363,7 @@ got_answer:
     void operator delete(void *ptr, BigAllocator *allocator) {/*Do nothing.  The memory is freed when the allocator is deleted.*/}
  
 private:
+    _uint64 e_loop, d_loop, perfect_matches;
     //
     // Count characters of a perfect match until a mismatch or the end of one or the other string, the
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
@@ -362,6 +371,7 @@ private:
     //
     inline int countPerfectMatch(const char *& p, const char *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
+      perfect_matches++;
 	    const char *pBase = p;
 	    const char *pend = p + availBytes;
 	    while (true) {
