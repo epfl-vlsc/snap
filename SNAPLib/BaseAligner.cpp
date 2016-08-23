@@ -313,7 +313,8 @@ Return Value:
         //
         _uint64 el, dl, pm;
         landauVishkin->getStats(&el, &dl, &pm);
-        logfile << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
+        logfile.write(inputRead->getData(), inputRead->getDataLength());
+        logfile << " " << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
         return;
     }
 
@@ -352,7 +353,8 @@ Return Value:
         // No need to finalize secondary results, since we don't have any.
         _uint64 el, dl, pm;
         landauVishkin->getStats(&el, &dl, &pm);
-        logfile << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
+        logfile.write(inputRead->getData(), inputRead->getDataLength());
+        logfile << " " << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
         return;
     }
 
@@ -438,7 +440,8 @@ Return Value:
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
                 _uint64 el, dl, pm;
                 landauVishkin->getStats(&el, &dl, &pm);
-                logfile << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
+                logfile.write(inputRead->getData(), inputRead->getDataLength());
+                logfile << " " << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
                 return;
             }
             nextSeedToTest = GetWrappedNextSeedToTest(seedLen, wrapCount);
@@ -639,7 +642,8 @@ Return Value:
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
                 _uint64 el, dl, pm;
                 landauVishkin->getStats(&el, &dl, &pm);
-                logfile << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
+                logfile.write(inputRead->getData(), inputRead->getDataLength());
+                logfile << " " << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
                 return;
             }
         }
@@ -667,7 +671,8 @@ Return Value:
     finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
     _uint64 el, dl, pm;
     landauVishkin->getStats(&el, &dl, &pm);
-    logfile << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
+    logfile.write(inputRead->getData(), inputRead->getDataLength());
+    logfile << " " << total_lv_calls << " " << el << " " << dl << " " << pm << std::endl;
     return;
 }
 
