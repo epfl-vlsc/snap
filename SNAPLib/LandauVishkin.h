@@ -140,10 +140,10 @@ public:
                 double *matchProbability,
                 int *o_netIndel = NULL)   // the net of insertions and deletions in the alignment.  Negative for insertions, positive for deleteions (and 0 if there are non in net).  Filled in only if matchProbability is non-NULL
 {
-    logfile.write(text, textLen);
+    /*logfile.write(text, textLen);
     logfile << " ";
     logfile.write(pattern, patternLen);
-    logfile << std::endl;
+    logfile << std::endl;*/
     int localNetIndel;
 	  int d;
     if (NULL == o_netIndel) {

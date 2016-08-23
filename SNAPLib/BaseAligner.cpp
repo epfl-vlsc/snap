@@ -98,6 +98,7 @@ Arguments:
  --*/
 {
     total_lv_calls = 0;
+    logfile.open("numcallsperread.txt");
     hadBigAllocator = allocator != NULL;
 
     nHashTableLookups = 0;
@@ -269,6 +270,7 @@ Return Value:
 
 --*/
 {   
+    total_lv_calls = 0;
     memset(hitCountByExtraSearchDepth, 0, sizeof(*hitCountByExtraSearchDepth) * extraSearchDepth);
 
     if (NULL != nSecondaryResults) {
@@ -309,6 +311,7 @@ Return Value:
         // Too short to have any seeds, it's hopeless.
         // No need to finalize secondary results, since we don't have any.
         //
+        logfile << total_lv_calls << std::endl;
         return;
     }
 
@@ -345,6 +348,7 @@ Return Value:
     if (countOfNs > maxK) {
         nReadsIgnoredBecauseOfTooManyNs++;
         // No need to finalize secondary results, since we don't have any.
+        logfile << total_lv_calls << std::endl;
         return;
     }
 
@@ -428,6 +432,7 @@ Return Value:
                                             primaryResult->score, primaryResult->mapq, probabilityOfBestCandidate, probabilityOfAllCandidates, primaryResult->location);
 #endif  // _DEBUG
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+                logfile << total_lv_calls << std::endl;
                 return;
             }
             nextSeedToTest = GetWrappedNextSeedToTest(seedLen, wrapCount);
@@ -626,6 +631,7 @@ Return Value:
 #endif  // _DEBUG
 
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+                logfile << total_lv_calls << std::endl;
                 return;
             }
         }
@@ -651,6 +657,7 @@ Return Value:
 #endif  // _DEBUG
 
     finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+    logfile << total_lv_calls << std::endl;
     return;
 }
 
