@@ -384,7 +384,16 @@ got_answer:
 
     void *operator new(size_t size, BigAllocator *allocator) {_ASSERT(size == sizeof(LandauVishkin<TEXT_DIRECTION>)); return allocator->allocate(size);}
     void operator delete(void *ptr, BigAllocator *allocator) {/*Do nothing.  The memory is freed when the allocator is deleted.*/}
- 
+
+    void getStats(_uint64* eloop, _uint64* dloop, _uint64* pm) {
+      *eloop = e_loop;
+      e_loop = 0;
+      *dloop = d_loop;
+      d_loop = 0;
+      *pm = perfect_matches;
+      perfect_matches = 0;
+    }
+
 private:
     _uint64 e_loop, d_loop, perfect_matches, cpm1, cpm2, cpm3, cpm4;
     std::ofstream logfile;
