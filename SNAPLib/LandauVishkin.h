@@ -99,6 +99,10 @@ public:
       std::cout << "e loop: " << e_loop << std::endl;
       std::cout << "d loop: " << d_loop << std::endl;
       std::cout << "pf match: " << perfect_matches << std::endl;
+      std::cout << "cpm1: " << cpm1 << std::endl;
+      std::cout << "cpm2: " << cpm2 << std::endl;
+      std::cout << "cpm3: " << cpm3 << std::endl;
+      std::cout << "cpm4: " << cpm4 << std::endl;
     }
 
     // Compute the edit distance between two strings, if it is <= k, or return -1 otherwise.
