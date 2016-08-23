@@ -215,7 +215,7 @@ public:
                 int end = __min(patternLen, textLen - d);
                 const char* pend = pattern + end;
 
-                cpm3++
+                cpm3++;
                 left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
