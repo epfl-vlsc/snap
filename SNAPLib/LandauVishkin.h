@@ -3,6 +3,7 @@
 #include "BigAlloc.h"
 #include "exit.h"
 #include "Genome.h"
+#include "fstream"
 
 const int MAX_K = 63;
 
@@ -83,6 +84,7 @@ public:
     cpm2 = 0;
     cpm3 = 0;
     cpm4 = 0;
+    logfile.open("lvlog.txt");
 }
 /*
     void pushBackCacheStats()
@@ -103,6 +105,7 @@ public:
       std::cout << "cpm2: " << cpm2 << std::endl;
       std::cout << "cpm3: " << cpm3 << std::endl;
       std::cout << "cpm4: " << cpm4 << std::endl;
+      logfile.close();
     }
 
     // Compute the edit distance between two strings, if it is <= k, or return -1 otherwise.
@@ -133,8 +136,9 @@ public:
                 double *matchProbability,
                 int *o_netIndel = NULL)   // the net of insertions and deletions in the alignment.  Negative for insertions, positive for deleteions (and 0 if there are non in net).  Filled in only if matchProbability is non-NULL
 {
+    logfile << textLen << " " << patternLen << " " << k << " " << std::endl;
     int localNetIndel;
-	int d;
+	  int d;
     if (NULL == o_netIndel) {
         //
         // If the user doesn't want netIndel, just use a stack local to avoid
@@ -376,6 +380,7 @@ got_answer:
  
 private:
     _uint64 e_loop, d_loop, perfect_matches, cpm1, cpm2, cpm3, cpm4;
+    std::ofstream logfile;
     //
     // Count characters of a perfect match until a mismatch or the end of one or the other string, the
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
