@@ -4,6 +4,7 @@
 #include "exit.h"
 #include "Genome.h"
 #include "fstream"
+#include <sstream>
 
 const int MAX_K = 63;
 
@@ -84,7 +85,10 @@ public:
     cpm2 = 0;
     cpm3 = 0;
     cpm4 = 0;
-    logfile.open("lvlog.txt");
+    std::ostringstream oss;
+    oss << "lv_log_" << TEXT_DIRECTION << ".txt";
+    std::string filename = oss.str();
+    logfile.open(filename);
 }
 /*
     void pushBackCacheStats()
