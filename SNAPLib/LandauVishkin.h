@@ -79,6 +79,10 @@ public:
     e_loop = 0;
     d_loop = 0;
     perfect_matches = 0;
+    cpm1 = 0;
+    cpm2 = 0;
+    cpm3 = 0;
+    cpm4 = 0;
 }
 /*
     void pushBackCacheStats()
@@ -163,6 +167,7 @@ public:
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
 
+    cpm1++;
     L(0, 0) = countPerfectMatch(p, t, end);
 
     if (L(0, 0) == end) {
@@ -198,6 +203,7 @@ public:
                 int end = __min(patternLen, textLen - d);
                 const char* pend = pattern + end;
 
+                cpm2++;
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
@@ -209,6 +215,7 @@ public:
                 int end = __min(patternLen, textLen - d);
                 const char* pend = pattern + end;
 
+                cpm3++;
                 left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
@@ -224,6 +231,7 @@ public:
                 int end = __min(patternLen, textLen - d);
                 const char* pend = pattern + end;
 
+                cpm4++;
                 right += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
@@ -363,7 +371,7 @@ got_answer:
     void operator delete(void *ptr, BigAllocator *allocator) {/*Do nothing.  The memory is freed when the allocator is deleted.*/}
  
 private:
-    _uint64 e_loop, d_loop, perfect_matches;
+    _uint64 e_loop, d_loop, perfect_matches, cpm1, cpm2, cpm3, cpm4;
     //
     // Count characters of a perfect match until a mismatch or the end of one or the other string, the
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
