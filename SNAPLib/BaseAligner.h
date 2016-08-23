@@ -34,6 +34,7 @@ Revision History:
 #include "AlignerStats.h"
 #include "directions.h"
 #include "GenomeIndex.h"
+#include <fstream>
 
 extern bool doAlignerPrefetch;
 
@@ -115,6 +116,7 @@ public:
 private:
 
     _uint64 total_lv_calls;
+    std::ofstream logfile;
     bool hadBigAllocator;
 
     LandauVishkin<> *landauVishkin;
