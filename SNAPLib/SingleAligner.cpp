@@ -36,6 +36,7 @@ Revision History:
 #include "Util.h"
 #include "SingleAligner.h"
 #include "MultiInputReadSupplier.h"
+#include <iostream>
 
 using namespace std;
 using util::stringEndsWith;
@@ -108,6 +109,9 @@ SingleAlignerContext::runIterationThread()
  
     BigAllocator *allocator = new BigAllocator(BaseAligner::getBigAllocatorReservation(index, true, maxHits, maxReadSize, index->getSeedLength(), numSeedsFromCommandLine, seedCoverage, maxSecondaryAlignmentsPerContig) 
         + alignmentResultBufferSize);
+    
+    cout << "reservation: " << BaseAligner::getBigAllocatorReservation(index, true, maxHits, maxReadSize, index->getSeedLength(), numSeedsFromCommandLine, seedCoverage, maxSecondaryAlignmentsPerContig) 
+        + alignmentResultBufferSize << endl;
    
     BaseAligner *aligner = new (allocator) BaseAligner(
             index,

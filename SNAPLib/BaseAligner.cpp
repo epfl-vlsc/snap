@@ -886,9 +886,9 @@ Return Value:
                     _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
 
                     int textLen = (int)__min(genomeDataLength - tailStart, 0x7ffffff0);
-                    total_lv_calls++;
                     score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, readToScore->getData() + tailStart, readToScore->getQuality() + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
+                    total_lv_calls++;
 
                     if (score1 == -1) {
                         score = -1;
@@ -1360,7 +1360,7 @@ Return Value:
             hitsPerContigCounts = NULL;
         }
     }
-    std::cout << " total LV calls: " << total_lv_calls << std::endl;
+    std::cout << "total lv calls: " << total_lv_calls << std::endl;
 }
 
 BaseAligner::HashTableElement::HashTableElement()
