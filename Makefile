@@ -1,8 +1,8 @@
 ifndef CXXFLAGS
-  CXXFLAGS = -O3 -Wno-format
+  CXXFLAGS = -O3 -Wno-format 
 endif
 
-CXXFLAGS += -MMD -ISNAPLib -msse -mssse3
+CXXFLAGS += -MMD -ISNAPLib -msse -mssse3 -mbmi 
 
 LDFLAGS += -pthread
 
