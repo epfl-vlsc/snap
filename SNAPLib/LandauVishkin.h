@@ -4,6 +4,7 @@
 #include "exit.h"
 #include "Genome.h"
 #include "tmmintrin.h"
+#include "nmmintrin.h"
 
 const int MAX_K = 63;
 
@@ -57,8 +58,7 @@ template<int TEXT_DIRECTION = 1> class LandauVishkin {
 #define L(e,d)			L_zero			[(e) * (2 * MAX_K + 1) + (d)]
 #define A(e,d)			A_zero			[(e) * (2 * MAX_K + 1) + (d)]
 #define MASK_128_LO 0x0000000000000000FFFFFFFFFFFFFFFF
-#define to_m64(x)  _mm_cvtsi64_m64(x)
-#define to_int64(x) _mm_cvtm64_si64(x)
+#define COMPARE_CTRL 0x38 // attributes: unsigned bytes, equal each, masked (-), least significant index
 
 public:
     LandauVishkin()
@@ -397,54 +397,12 @@ private:
 	    } // while true
 */
 
-/*    
-      // Processing 64 bits at a time
-      const __m64 bswap_mask = _mm_setr_pi8(7, 6, 5, 4, 3, 2, 1, 0);
-      while (true) {
-		    _uint64 x;
-		    // TODO: check if the conditional branch matters
-        if (TEXT_DIRECTION == 1) {
-          // only for debugging, gdb doesn't know about unsigned __int128 
-          // unsigned __int128 p_conv = *((unsigned __int128*)p);
-          // unsigned __int128 t_conv = *((unsigned __int128*)t);
-			    // x = p_conv ^ t_conv;
-          x = *((_uint64*)p) ^ *((_uint64*)t);
-		    } else {
-          _uint64 T = *(_uint64*)(t - 7);
-
-          __m64 T_reg = *((__m64*)(&T)); 
-
-//          __m64 T_reg = _mm_cvtsi64_m64(T);
-          __m64 tSwap_reg = _mm_shuffle_pi8(T_reg, bswap_mask);
-//		      _uint64 tSwap = _mm_cvtm64_si64(tSwap_reg);
-
-          _uint64 tSwap = *((_uint64*)(&tSwap_reg)); 
-          
-			    x = *((_uint64*)p) ^ tSwap;
-		    }
-
-		    if (x) {
-			    unsigned long zeroes;
-			    CountTrailingZeroes(x, zeroes);
-			    zeroes >>= 3;
-			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
-		    } // if (x)
-
-		    p += 8;
-		    if (p >= pend) {
-			    return availBytes;
-		    }
-
-		    t += 8 * TEXT_DIRECTION;
-	    }
-*/
-
-
+/*
       // Processing 128 bits at a time - with branch
       static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
       while (true) {
 		    unsigned __int128 x;
-       
+  
         if (TEXT_DIRECTION == 1) {
           x = *((unsigned __int128*)p) ^ *((unsigned __int128*)t);
 		    } else {
@@ -454,21 +412,22 @@ private:
           __m128i T_reg = _mm_set_epi64x(T2, T1);
 
           __m128i tSwap_reg = _mm_shuffle_epi8(T_reg, bswap_mask);
-			    unsigned __int128 tSwap = *((unsigned __int128*)&tSwap_reg); // TODO: probably not 100% safe
+			    unsigned __int128 tSwap = *((unsigned __int128*)(&tSwap_reg)); // TODO: probably not 100% safe
           
 			    x = *((unsigned __int128*)p) ^ tSwap;
 		    }
 
         if (x) {
           _uint64 zeroes;
-          _uint64 lo = x & MASK_128_LO;
-          CountTrailingZeroes(lo, zeroes);
+          _uint64 lo; 
           
-          if (zeroes >= 8) {
+          if (x & MASK_128_LO) {
+            lo = x & MASK_128_LO;
+            CountTrailingZeroes(lo, zeroes);
+          } else {
             _uint64 hi = x >> 64;
-            _uint64 zeroes_hi;
-            CountTrailingZeroes(hi, zeroes_hi);
-            zeroes += zeroes_hi;
+            CountTrailingZeroes(hi, zeroes);
+            zeroes += 64; // because the lower 64 bits were all 0
           } 
 
           zeroes >>= 3;
@@ -482,40 +441,38 @@ private:
 
 		    t += 16 * TEXT_DIRECTION;
 	    }
+*/
 
 
-
-/* 
+ 
       // Processing 128 bits at a time - without branch
       static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
 
       while (true) {
-        __m128i X_reg;
-
+        int char_match;
+        
         _uint64 P1 = *(_uint64*)(p);
         _uint64 P2 = *(_uint64*)(p + 8);
-        __m128i P_reg = _mm_set_epi64x(P2, P1); // TODO: probably not, but check if I also have to do some shuffling here
+        __m128i P_reg = _mm_set_epi64x(P2, P1);
         
         if (TEXT_DIRECTION == 1) {
           _uint64 T1 = *(_uint64*)(t);
           _uint64 T2 = *(_uint64*)(t + 8);
           __m128i T_reg = _mm_set_epi64x(T2, T1);
-
-          X_reg = _mm_xor_si128(P_reg, T_reg);
+        
+          // TODO: pass the correct number of bytes
+          char_match = _mm_cmpestri(P_reg, 128, T_reg, 128, COMPARE_CTRL);
 		    } else {
-
           _uint64 T1 = *(_uint64*)(t - 7);
           _uint64 T2 = *(_uint64*)(t - 15);
           __m128i T_reg = _mm_set_epi64x(T2, T1);
 
           __m128i tSwap_reg = _mm_shuffle_epi8(T_reg, bswap_mask);
-          
-          X_reg = _mm_xor_si128(P_reg, tSwap_reg);
+          char_match = _mm_cmpestri(P_reg, 128, tSwap_reg, 128, COMPARE_CTRL);
 		    }
 
-        if (_mm_testz_si128(X_reg, X_reg)) {
-          // shuffle, count, return
-
+        if (char_match < 16) {
+          return __min((int)(p - pBase) + char_match, availBytes);
         }
 
         p += 16;
@@ -525,7 +482,7 @@ private:
 
 		    t += 16 * TEXT_DIRECTION;
 	    }
-*/
+
 	    return 0;
     }
 
