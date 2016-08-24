@@ -446,30 +446,23 @@ private:
 
  
       // Processing 128 bits at a time - without branch
-      static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
+      // static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
+      static const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
 
       while (true) {
         int char_match;
-        
-        _uint64 P1 = *(_uint64*)(p);
-        _uint64 P2 = *(_uint64*)(p + 8);
-        __m128i P_reg = _mm_set_epi64x(P2, P1);
-        
-        if (TEXT_DIRECTION == 1) {
-          _uint64 T1 = *(_uint64*)(t);
-          _uint64 T2 = *(_uint64*)(t + 8);
-          __m128i T_reg = _mm_set_epi64x(T2, T1);
-        
-          // TODO: pass the correct number of bytes
-          char_match = _mm_cmpestri(P_reg, 128, T_reg, 128, COMPARE_CTRL);
-		    } else {
-          _uint64 T1 = *(_uint64*)(t - 7);
-          _uint64 T2 = *(_uint64*)(t - 15);
-          __m128i T_reg = _mm_set_epi64x(T2, T1);
+        __m128i T_reg;
+      
+        __m128i P_reg = _mm_loadu_si128((__m128i const*)p);
 
-          __m128i tSwap_reg = _mm_shuffle_epi8(T_reg, bswap_mask);
-          char_match = _mm_cmpestri(P_reg, 128, tSwap_reg, 128, COMPARE_CTRL);
+        if (TEXT_DIRECTION == 1) {
+          T_reg = _mm_loadu_si128((__m128i const*)t);
+		    } else {
+          __m128i T_temp = _mm_loadu_si128((__m128i const*)(t - 15));
+          T_reg = _mm_shuffle_epi8(T_temp, bswap_mask);
 		    }
+        
+        char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
 
         if (char_match < 16) {
           return __min((int)(p - pBase) + char_match, availBytes);
