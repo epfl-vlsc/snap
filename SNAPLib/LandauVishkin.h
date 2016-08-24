@@ -219,6 +219,7 @@ public:
                 const char* pend = pattern + end;
 
                 cpm2++;
+                logfile << cpm2 << std::endl;
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
@@ -231,6 +232,7 @@ public:
                 const char* pend = pattern + end;
 
                 cpm3++;
+                logfile << cpm3 << std::endl;
                 left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
@@ -247,6 +249,7 @@ public:
                 const char* pend = pattern + end;
 
                 cpm4++;
+                logfile << cpm4 << std::endl;
                 right += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
