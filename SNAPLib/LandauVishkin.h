@@ -447,10 +447,8 @@ private:
  
       // Processing 128 bits at a time - without branch
       // static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
-      static const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-
+      const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
       while (true) {
-        int char_match;
         __m128i T_reg;
       
         __m128i P_reg = _mm_loadu_si128((__m128i const*)p);
@@ -462,9 +460,10 @@ private:
           T_reg = _mm_shuffle_epi8(T_temp, bswap_mask);
 		    }
         
-        char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
+        __m128i X = _mm_xor_si128(P_reg, T_reg);
 
-        if (char_match < 16) {
+        if (!_mm_test_all_zeros(X, X)) {
+          int char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
           return __min((int)(p - pBase) + char_match, availBytes);
         }
 
