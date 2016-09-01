@@ -34,6 +34,7 @@ Revision History:
 #include "AlignerStats.h"
 #include "directions.h"
 #include "GenomeIndex.h"
+#include <chrono>
 
 extern bool doAlignerPrefetch;
 
@@ -114,6 +115,7 @@ public:
 
 private:
 
+    std::chrono::high_resolution_clock::time_point t1;
     bool hadBigAllocator;
 
     LandauVishkin<> *landauVishkin;

@@ -97,6 +97,7 @@ Arguments:
  --*/
 {
     hadBigAllocator = allocator != NULL;
+    t1 = std::chrono::high_resolution_clock::now();
 
     nHashTableLookups = 0;
     nLocationsScored = 0;
@@ -884,8 +885,18 @@ Return Value:
                     _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
 
                     int textLen = (int)__min(genomeDataLength - tailStart, 0x7ffffff0);
+                    auto t2 = std::chrono::high_resolution_clock::now();
+                    auto interlvtime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+                    if (interlvtime.count() > 500)
+                      printf("inter LV time was %d\n", interlvtime.count());
+                    t1 = t2;
                     score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, readToScore->getData() + tailStart, readToScore->getQuality() + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
+                    
+                    auto t3 = std::chrono::high_resolution_clock::now();
+                    auto afterlvtime = std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2);
+                    if (interlvtime.count() > 500)
+                      printf("after LV time was %d\n", afterlvtime.count());  
 
                     if (score1 == -1) {
                         score = -1;
