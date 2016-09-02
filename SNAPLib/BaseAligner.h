@@ -116,6 +116,7 @@ public:
 private:
 
     std::chrono::high_resolution_clock::time_point t1;
+    _uint64 num_reads = 0;
     bool hadBigAllocator;
 
     LandauVishkin<> *landauVishkin;
