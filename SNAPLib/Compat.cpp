@@ -1374,9 +1374,10 @@ CloseLargeFile(
 class MemoryMappedFile
 {
 public:
-    int     fd;
+    //int     fd;
     void*   map;
     size_t  length;
+    size_t mapped_length;
 };
 
     MemoryMappedFile*
@@ -1388,41 +1389,63 @@ OpenMemoryMappedFile(
     bool write,
     bool sequential)
 {
+  if (offset != 0)
+    warn("OFFSET WAS NOT ZERO!!!!\n");
+
   int fd = open(filename, write ? O_CREAT | O_RDWR : O_RDONLY, S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        warn("OpenMemoryMappedFile %s failed", filename);
-        return NULL;
-    }
-    // todo: large page support
-    size_t page = getpagesize();
-    size_t extra = offset % page;
-    void* map = mmap(NULL, length + extra, (write ? PROT_WRITE : 0) | PROT_READ, MAP_PRIVATE, fd, offset - extra);
-    if (map == NULL || map == MAP_FAILED) {
-        warn("OpenMemoryMappedFile %s mmap failed", filename);
-        close(fd);
-        return NULL;
-    }
-    int e = madvise(map, length + extra, sequential ? MADV_SEQUENTIAL : MADV_RANDOM);
-    if (e < 0) {
-        warn("OpenMemoryMappedFile %s madvise failed", filename);
-    }
-    MemoryMappedFile* result = new MemoryMappedFile();
-    result->fd = fd;
-    result->map = map;
-    result->length = length + extra;
-    *o_contents = (char*)map + extra;
-    return result;
+  if (fd < 0) {
+    warn("OpenMemoryMappedFile %s failed", filename);
+    return NULL;
+  }
+  // todo: large page support
+  size_t page = getpagesize();
+  size_t extra = offset % page;
+  void* map = mmap(NULL, length + extra, (write ? PROT_WRITE : 0) | PROT_READ, MAP_PRIVATE, fd, offset - extra);
+  if (map == NULL || map == MAP_FAILED) {
+    warn("OpenMemoryMappedFile %s mmap failed", filename);
+    close(fd);
+    return NULL;
+  }
+  int e = madvise(map, length + extra, sequential ? MADV_SEQUENTIAL : MADV_RANDOM);
+  if (e < 0) {
+    warn("OpenMemoryMappedFile %s madvise failed", filename);
+  }
+
+  // map an anon huge page region and copy in the file contents
+  size_t remainder = (length % 256);
+  size_t aligned_size = remainder ? length + 256 - remainder : length;
+
+  void* hugepage_region = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+  if (hugepage_region <= 0) {
+    WriteErrorMessage("unable to mmap huge region\n");
+    soft_exit(1);
+  }
+  memcpy(hugepage_region, map, length+extra);
+
+  e = munmap(map, length+extra);
+  int e2 = close(fd);
+  if (e != 0 || e2 != 0) {
+    WriteErrorMessage("CloseMemoryMapped file failed\n");
+  }
+
+  MemoryMappedFile* result = new MemoryMappedFile();
+  //result->fd = fd;
+  result->map = hugepage_region;
+  result->length = length + extra;
+  result->mapped_length = aligned_size;
+  *o_contents = (char*)hugepage_region + extra;
+  return result;
 }
 
     void
 CloseMemoryMappedFile(
     MemoryMappedFile* mappedFile)
 {
-    int e = munmap(mappedFile->map, mappedFile->length);
-    int e2 = close(mappedFile->fd);
-    if (e != 0 || e2 != 0) {
+    int e = munmap(mappedFile->map, mappedFile->mapped_length);
+    if (e != 0 ) {
         WriteErrorMessage("CloseMemoryMapped file failed\n");
     }
+
 }
 
 void AdviseMemoryMappedFilePrefetch(const MemoryMappedFile *mappedFile)
