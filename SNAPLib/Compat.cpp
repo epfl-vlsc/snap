@@ -1416,8 +1416,8 @@ OpenMemoryMappedFile(
   size_t aligned_size = remainder ? length + 256 - remainder : length;
 
   void* hugepage_region = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
-  if (hugepage_region <= 0) {
-    WriteErrorMessage("unable to mmap huge region\n");
+  if (hugepage_region == reinterpret_cast<void*>(-1)) {
+    WriteErrorMessage("unable to mmap huge region. You probably need more huge pages\n");
     soft_exit(1);
   }
   memcpy(hugepage_region, map, length+extra);
