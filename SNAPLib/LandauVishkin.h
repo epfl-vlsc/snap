@@ -111,9 +111,9 @@ public:
 	//
 
     int computeEditDistance(
-                const char* text,
+                const BaseRef* text,
                 int textLen, 
-                const char* pattern,
+                const BaseRef* pattern,
                 const char *qualityString,
                 int patternLen,
                 int k,
@@ -153,8 +153,8 @@ public:
         text--; // so now it points at the "first" character of t, not after it.
     }
 
-    const char* p = pattern;
-    const char* t = text;
+    const BaseRef* p = pattern;
+    const BaseRef* t = text;
     int end = __min(patternLen, textLen);
 
     L(0, 0) = countPerfectMatch(p, t, end);
@@ -184,9 +184,9 @@ public:
             int best = L(e-1, d) + 1; // up
             A(e, d) = 'X';
 
-            const char* p = pattern + best;
-            const char* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
-            if (*p == *t && best >= 0) {
+            const BaseRef* p = pattern + best;
+            const BaseRef* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
+            if (p->equal(t) && best >= 0) {
                 int end = __min(patternLen, textLen - d);
 
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
@@ -336,9 +336,9 @@ got_answer:
 
     // Version that does not requre match probability and quality string
     inline int computeEditDistance(
-            const char* text,
+            const BaseRef* text,
             int textLen,
-            const char* pattern,
+            const BaseRef* pattern,
             int patternLen,
             int k)
     {
@@ -357,38 +357,67 @@ private:
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
     // or first character beyond the end.
     //
-    inline int countPerfectMatch(const char *& p, const char *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
+    inline int countPerfectMatch(const BaseRef *& p, const BaseRef *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
-	    const char *pBase = p;
-	    const char *pend = p + availBytes;
+	    const BaseRef *pBase = p;
+	    const BaseRef *pend = p + availBytes;
 	    while (true) {
 		    _uint64 x;
+            int skip = 0;
 		    if (TEXT_DIRECTION == 1) {
-			    x = *((_uint64*)p) ^ *((_uint64*)t);
+                _uint64 p64 = *((_uint64*)p->getPtr());
+                _uint64 t64 = *((_uint64*)t->getPtr());
+                if (p->isUpperNibble()) {
+                    p64 <<= 4;
+                    skip = 1;
+                }
+                if (t->isUpperNibble()) {
+                    p64 <<= 4;
+                    skip = max(skip, 1);
+                }
+                x = p64 ^ t64;
 		    } else {
-			    _uint64 T = *(_uint64 *)(t - 7);
-			    _uint64 tSwap = ByteSwapUI64(T);
-			    x = *((_uint64*)p) ^ tSwap;
+                _uint64 p64 = *((_uint64*)p->getPtr());
+                _uint64 t64 = *((_uint64*)t->getPtr(-7));
+                _uint64 T = *(_uint64 *)(t - 7);
+			    _uint64 tSwap = NibbleSwapUI64(T);
+			    x = p64 ^ tSwap;
 		    }
 
 		    if (x) {
 			    unsigned long zeroes;
 			    CountTrailingZeroes(x, zeroes);
-			    zeroes >>= 3;
+			    zeroes >>= 2;
 			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
 		    } // if (x)
 
-		    p += 8;
-		    if (p >= pend) {
+		    p += 8 - skip;
+		    if (p >= pend) { // FixMe: JL
 			    return availBytes;
 		    }
 
-		    t += 8 * TEXT_DIRECTION;
+		    t += (8 - skip) * TEXT_DIRECTION;
 	    } // while true
 
 	    return 0;
     }
 
+    inline _uint64 NibbleSwapUI64(_uint64 v) {
+        // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
+        // swap odd and even bits
+        v = ((v >> 1) & 0x5555555555555555)  | ((v & 0x5555555555555555) << 1);
+        // swap consecutive pairs
+        v = ((v >> 2) & 0x3333333333333333)  | ((v & 0x3333333333333333) << 2);
+        // swap nibbles ...
+        v = ((v >> 4) & 0x0F0F0F0F0F0F0F0F)  | ((v & 0x0F0F0F0F0F0F0F0F) << 4);
+        // swap bytes
+        v = ((v >> 8) & 0x00FF00FF00FF00FF)  | ((v & 0x00FF00FF00FF00FF) << 8);
+       // swap 2-byte long pairs
+        v = ((v >> 16) & 0x0000FFFF0000FFFF) | ((v & 0x0000FFFF0000FFFF) << 16);
+        // swap 4-byte long pairs
+        v = ((v >> 32)                     ) | ((v) << 32);
+        return v;
+    }
 
     //
     // Table of d values for the inner loop in computeEditDistance.  This allows us to avoid the line d = (d > 0 ? -d : -d+1), which causes
@@ -466,7 +495,7 @@ public:
 
     // Compute the edit distance between two strings and write the CIGAR string in cigarBuf.
     // Returns -1 if the edit distance exceeds k or -2 if we run out of space in cigarBuf.
-    int computeEditDistance(const char* text, int textLen, const char* pattern, int patternLen, int k,
+    int computeEditDistance(const BaseRef* text, int textLen, const BaseRef* pattern, int patternLen, int k,
                             char* cigarBuf, int cigarBufLen, bool useM,
                             CigarFormat format = COMPACT_CIGAR_STRING,
                             int* o_cigarBufUsed = NULL,
@@ -474,7 +503,7 @@ public:
                             int *o_netIndel = NULL);
 
     // same, but places indels as early as possible, following BWA & VCF conventions
-    int computeEditDistanceNormalized(const char* text, int textLen, const char* pattern, int patternLen, int k,
+    int computeEditDistanceNormalized(const BaseRef* text, int textLen, const BaseRef* pattern, int patternLen, int k,
                             char* cigarBuf, int cigarBufLen, bool useM,
                             CigarFormat format = COMPACT_CIGAR_STRING,
                             int* o_cigarBufUsed = NULL,

@@ -1059,7 +1059,8 @@ BAMFormat::computeCigarOps(
     unsigned clippingWordsBefore = ((basesClippedBefore + extraBasesClippedBefore > 0) ? 1 : 0) + ((frontHardClipping > 0) ? 1 : 0);
     unsigned clippingWordsAfter = ((basesClippedAfter + extraBasesClippedAfter > 0) ? 1 : 0) + ((backHardClipping > 0) ? 1 : 0);
 
-    SAMFormat::computeCigar(BAM_CIGAR_OPS, genome, lv, cigarBuf + 4 * clippingWordsBefore, cigarBufLen - 4 * (clippingWordsBefore + clippingWordsAfter), data, dataLength, basesClippedBefore, extraBasesClippedBefore,
+    SAMFormat::computeCigar(BAM_CIGAR_OPS, genome, lv, cigarBuf + 4 * clippingWordsBefore, cigarBufLen - 4 * (clippingWordsBefore + clippingWordsAfter),
+                            new BaseRef(new BaseSeq(dataLength, data, false)), dataLength, basesClippedBefore, extraBasesClippedBefore, // FIXMe: JL
         basesClippedAfter, &extraBasesClippedAfter, genomeLocation, useM, o_editDistance, &used,  o_addFrontClipping);
 
     if (*o_addFrontClipping != 0) {

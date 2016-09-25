@@ -936,7 +936,7 @@ GenomeIndex::ComputeBiasTable(const Genome* genome, int seedLen, double* table, 
             if (i % 100000000 == 0) {
                 WriteStatusMessage("Bias computation: %lld / %lld\n",(_int64)i, (_int64)countOfBases);
             }
-            const char *bases = genome->getSubstring(i,seedLen);
+            const BaseRef *bases = genome->getSubstring(i,seedLen);
             //
             // Check it for NULL, because Genome won't return strings that cross contig boundaries.
             //
@@ -1086,7 +1086,7 @@ GenomeIndex::ComputeBiasTableWorkerThreadMain(void *param)
     const _uint64 printBatchSize = 100000000;
     for (GenomeDistance i = context->genomeChunkStart; i < context->genomeChunkEnd; i++) {
 
-            const char *bases = context->genome->getSubstring(i, context->seedLen);
+            const BaseRef *bases = context->genome->getSubstring(i, context->seedLen);
             //
             // Check it for NULL, because Genome won't return strings that cross contig boundaries.
             //
@@ -1182,7 +1182,7 @@ GenomeIndex::BuildHashTablesWorkerThread(BuildHashTablesThreadContext *context)
     IndexBuildStats stats;
 
     for (GenomeLocation genomeLocation = context->genomeChunkStart; genomeLocation < context->genomeChunkEnd; genomeLocation++) {
-        const char *bases = genome->getSubstring(genomeLocation, seedLen);
+        const BaseRef *bases = genome->getSubstring(genomeLocation, seedLen);
         //
         // Check it for NULL, because Genome won't return strings that cross contig boundaries.
         //

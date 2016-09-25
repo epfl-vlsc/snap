@@ -1226,7 +1226,7 @@ SAMFormat::writeRead(
 
 	if (genomeLocation != InvalidGenomeLocation) {
 		cigar = computeCigarString(context.genome, lv, cigarBuf, cigarBufSize, cigarBufWithClipping, cigarBufWithClippingSize,
-			clippedData, clippedLength, basesClippedBefore, extraBasesClippedBefore, basesClippedAfter, 
+			new BaseRef(new BaseSeq(clippedLength, clippedData, false)), clippedLength, basesClippedBefore, extraBasesClippedBefore, basesClippedAfter, // FIXMe: JL
 			read->getOriginalFrontHardClipping(), read->getOriginalBackHardClipping(), genomeLocation, direction, useM,
 			&editDistance, o_addFrontClipping);
 		if (*o_addFrontClipping != 0) {
@@ -1339,7 +1339,7 @@ SAMFormat::computeCigar(
     LandauVishkinWithCigar * lv,
     char * cigarBuf, 
     int cigarBufLen, 
-    const char * data, 
+    const BaseRef* data,
     GenomeDistance dataLength, 
     unsigned basesClippedBefore, 
     GenomeDistance extraBasesClippedBefore, 
@@ -1378,7 +1378,7 @@ SAMFormat::computeCigar(
         *o_extraBasesClippedAfter = 0;
     }
 
-    const char *reference = genome->getSubstring(genomeLocation, dataLength);
+    const BaseRef *reference = genome->getSubstring(genomeLocation, dataLength);
     if (NULL == reference) {
         //
         // Fell off the end of the contig.
@@ -1459,7 +1459,7 @@ SAMFormat::computeCigarString(
     int                         cigarBufLen,
     char *                      cigarBufWithClipping,
     int                         cigarBufWithClippingLen,
-    const char *                data,
+    const BaseRef*              data,
     GenomeDistance              dataLength,
     unsigned                    basesClippedBefore,
     GenomeDistance              extraBasesClippedBefore,
@@ -1514,8 +1514,8 @@ SAMFormat::computeCigarString(
         }
         snprintf(cigarBufWithClipping, cigarBufWithClippingLen, "%s%s%s%s%s", hardClipBefore, clipBefore, cigarBuf, clipAfter, hardClipAfter);
 
-		validateCigarString(genome, cigarBufWithClipping, cigarBufWithClippingLen, 
-			data - basesClippedBefore, dataLength + (basesClippedBefore + basesClippedAfter), genomeLocation + extraBasesClippedBefore, direction, useM);
+		validateCigarString(genome, cigarBufWithClipping, cigarBufWithClippingLen, data - basesClippedBefore,
+                            dataLength + (basesClippedBefore + basesClippedAfter), genomeLocation + extraBasesClippedBefore, direction, useM);
 
         return cigarBufWithClipping;
     }

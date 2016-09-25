@@ -451,11 +451,13 @@ Return Value:
 
         SetSeedUsed(nextSeedToTest);
 
-        if (!Seed::DoesTextRepresentASeed(read[FORWARD]->getData() + nextSeedToTest, seedLen)) {
+        BaseSeq* readSeq = new BaseSeq(seedLen, read[FORWARD]->getData() + nextSeedToTest, false); // FIXMe JL
+        BaseRef* readRef = new BaseRef(readSeq);
+        if (!Seed::DoesTextRepresentASeed(readRef, seedLen)) {
             continue;
         }
 
-        Seed seed(read[FORWARD]->getData() + nextSeedToTest, seedLen);
+        Seed seed(readRef, seedLen);
 
         _int64        nHits[NUM_DIRECTIONS];                // Number of times this seed hits in the genome
         const GenomeLocation  *hits[NUM_DIRECTIONS];        // The actual hits (of size nHits)
@@ -834,7 +836,7 @@ Return Value:
                 double matchProbability = 0;
                 unsigned readDataLength = read[elementToScore->direction]->getDataLength();
                 GenomeDistance genomeDataLength = readDataLength + MAX_K; // Leave extra space in case the read has deletions
-                const char *data = genome->getSubstring(genomeLocation, genomeDataLength);
+                const BaseRef *data = genome->getSubstring(genomeLocation, genomeDataLength);
 
 #if 0 // This only happens when we're in the padding region, and genomeLocations there just lead to problems.  Just say no.
                 if (NULL == data) {
@@ -884,7 +886,9 @@ Return Value:
                     _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
 
                     int textLen = (int)__min(genomeDataLength - tailStart, 0x7ffffff0);
-                    score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, readToScore->getData() + tailStart, readToScore->getQuality() + tailStart, readLen - tailStart,
+                    BaseSeq* readSeq = new BaseSeq(readLen, readToScore->getData() + tailStart, false); // FixME JL
+
+                    score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, new BaseRef(readSeq), readToScore->getQuality() + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
 
                     if (score1 == -1) {
@@ -893,7 +897,8 @@ Return Value:
                         // The tail of the read matched; now let's reverse match the reference genome and the head
                         int limitLeft = scoreLimit - score1;
                         int genomeLocationOffset;
-                        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, reversedRead[elementToScore->direction] + readLen - seedOffset,
+                        BaseSeq* readSeq = new BaseSeq(readLen, reversedRead[elementToScore->direction] + readLen - seedOffset, false); // FixME JL
+                        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, new BaseRef(readSeq),
                                                                                     read[OppositeDirection(elementToScore->direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
                                                                                     &genomeLocationOffset);
 

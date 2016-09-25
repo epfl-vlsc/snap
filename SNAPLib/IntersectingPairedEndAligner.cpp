@@ -28,6 +28,7 @@ Revision History:
 #include "Error.h"
 #include "BigAlloc.h"
 #include "AlignerOptions.h"
+#include "BaseSeq.h"
 
 #ifdef  _DEBUG
 extern bool _DumpAlignments;    // From BaseAligner.cpp
@@ -321,7 +322,9 @@ IntersectingPairedEndAligner::align(
 
             SetSeedUsed(nextSeedToTest);
 
-            if (!Seed::DoesTextRepresentASeed(reads[whichRead][FORWARD]->getData() + nextSeedToTest, seedLen)) {
+            BaseSeq* readSeq = new BaseSeq(seedLen, reads[whichRead][FORWARD]->getData() + nextSeedToTest, false); // FIXMe JL
+            BaseRef* readRef = new BaseRef(readSeq);
+            if (!Seed::DoesTextRepresentASeed(readRef, seedLen)) {
                 //
                 // It's got Ns in it, so just skip it.
                 //
@@ -329,7 +332,7 @@ IntersectingPairedEndAligner::align(
                 continue;
             }
 
-            Seed seed(reads[whichRead][FORWARD]->getData() + nextSeedToTest, seedLen);
+            Seed seed(readRef, seedLen);
             //
             // Find all instances of this seed in the genome.
             //
@@ -974,7 +977,7 @@ IntersectingPairedEndAligner::scoreLocation(
     Read *readToScore = reads[whichRead][direction];
     unsigned readDataLength = readToScore->getDataLength();
     GenomeDistance genomeDataLength = readDataLength + MAX_K; // Leave extra space in case the read has deletions
-    const char *data = genome->getSubstring(genomeLocation, genomeDataLength);
+    const BaseRef *data = genome->getSubstring(genomeLocation, genomeDataLength);
 
 #if		0 // This only happens when genomeLocation is in the padding, which can lead to no good.  Just say no.
     if (NULL == data) {
@@ -1028,14 +1031,16 @@ IntersectingPairedEndAligner::scoreLocation(
     } else {
         textLen = (int)(genomeDataLength - tailStart);
     }
-    score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, readToScore->getData() + tailStart, readToScore->getQuality() + tailStart, readLen - tailStart,
+        BaseSeq* readSeq = new BaseSeq(readLen - tailStart, readToScore->getData() + tailStart, false); // FIXMe: JL
+        score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, new BaseRef(readSeq), readToScore->getQuality() + tailStart, readLen - tailStart,
         scoreLimit, &matchProb1);
     if (score1 == -1) {
         *score = -1;
     } else {
         // The tail of the read matched; now let's reverse the reference genome data and match the head
         int limitLeft = scoreLimit - score1;
-        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, reversedRead[whichRead][direction] + readLen - seedOffset,
+        BaseSeq* readSeq = new BaseSeq(seedOffset, reversedRead[whichRead][direction] + readLen - seedOffset, false); // FIXMe: JL
+        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, new BaseRef(readSeq),
                                                                     reads[whichRead][OppositeDirection(direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2, genomeLocationOffset);
 
         if (score2 == -1) {

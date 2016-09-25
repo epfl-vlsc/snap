@@ -190,7 +190,7 @@ bool AppendFASTAGenome(const Genome *genome, FILE *fasta, const char *prefix="")
         GenomeLocation start = contig.beginningLocation;
         GenomeLocation end = i + 1 < nContigs ? contigs[i + 1].beginningLocation : genome->getCountOfBases();
         GenomeDistance size = end - start;
-        const char *bases = genome->getSubstring(start, size);
+        const char *bases = genome->getSubstring(start, size)->toChars();
 
         fprintf(fasta, ">%s%s\n", prefix, contig.name);
         fwrite(bases, 1, size, fasta);

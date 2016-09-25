@@ -2,7 +2,7 @@
 
 Module Name:
 
-    geonome.cpp
+    genome.cpp
 
 Abstract:
 
@@ -36,15 +36,16 @@ Genome::Genome(GenomeDistance i_maxBases, GenomeDistance nBasesStored, unsigned 
 : maxBases(i_maxBases), minLocation(0), maxLocation(i_maxBases), maxContigs(i_maxContigs),
   chromosomePadding(i_chromosomePadding), mappedFile(NULL)
 {
-    bases = ((char *) BigAlloc(nBasesStored + 2 * N_PADDING)) + N_PADDING;
+    bases = new BaseSeq(nBasesStored + 2 * N_PADDING);
     if (NULL == bases) {
         WriteErrorMessage("Genome: unable to allocate memory for %llu bases\n", GenomeLocationAsInt64(maxBases));
         soft_exit(1);
     }
 
     // Add N's for the N_PADDING bases before and after the genome itself
-    memset(bases - N_PADDING, 'n', N_PADDING);
-    memset(bases + nBasesStored, 'n', N_PADDING);
+    bases->baseSet(0, 'n', N_PADDING);
+    bases->baseSet(N_PADDING + nBasesStored, 'n', N_PADDING);
+    bases->adjustStart(N_PADDING);  // Ignore padding from now on
 
     nBases = 0;
 
@@ -62,7 +63,7 @@ Genome::addData(const char *data, GenomeDistance len)
         soft_exit(1);
     }
 
-    memcpy(bases + nBases,data,len);
+    bases->baseSet(nBases, data, len);
     nBases += (unsigned)len;
 }
 
@@ -108,7 +109,7 @@ Genome::startContig(const char *contigName)
 
 Genome::~Genome()
 {
-    BigDealloc(bases - N_PADDING);
+    delete bases;
     for (int i = 0; i < nContigs; i++) {
         delete [] contigs[i].name;
         contigs[i].name = NULL;
@@ -158,11 +159,12 @@ Genome::saveToFile(const char *fileName) const
 	//
 	const size_t max_chunk_size = 1 * 1024 * 1024 * 1024;	// 1 GB (or GiB for the obsessively precise)
 
+    char* basesAsChars = bases->toChars(0);
 	size_t bases_to_write = nBases;
 	size_t bases_written = 0;
 	while (bases_to_write > 0) {
 		size_t bases_this_write = __min(bases_to_write, max_chunk_size);
-		if (bases_this_write != fwrite(bases + bases_written, 1, bases_this_write, saveFile)) {
+		if (bases_this_write != fwrite(basesAsChars + bases_written, 1, bases_this_write, saveFile)) {
 			WriteErrorMessage("Genome::saveToFile: fwrite failed\n");
 			fclose(saveFile);
 			return false;
@@ -174,6 +176,7 @@ Genome::saveToFile(const char *fileName) const
 	_ASSERT(bases_written == nBases);
 
     fclose(saveFile);
+    bases->dealloc(basesAsChars);
     return true;
 }
 
@@ -260,13 +263,15 @@ Genome::loadFromFile(const char *fileName, unsigned chromosomePadding, GenomeLoc
     }
 
     size_t readSize;
+    char* basesAsChars;
 	if (map) {
 		GenericFile_map *mappedFile = (GenericFile_map *)loadFile;
-		genome->bases = (char *)mappedFile->mapAndAdvance(length, &readSize);
+		basesAsChars = (char *)mappedFile->mapAndAdvance(length, &readSize);
 		genome->mappedFile = mappedFile;
 		mappedFile->prefetch();
 	} else {
-		readSize = loadFile->read(genome->bases, length);
+        basesAsChars = new char[length];
+		readSize = loadFile->read(basesAsChars, length);
 
 		loadFile->close();
 		delete loadFile;
@@ -279,8 +284,9 @@ Genome::loadFromFile(const char *fileName, unsigned chromosomePadding, GenomeLoc
 		delete genome;
 		return NULL;
 	}
-	
-	genome->fillInContigLengths();
+    genome->bases = new BaseSeq(length, basesAsChars, true);
+
+    genome->fillInContigLengths();
     genome->sortContigsByName();
     delete[] contigNameBuffer;
     return genome;

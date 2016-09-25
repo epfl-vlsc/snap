@@ -24,16 +24,17 @@ Revision History:
 
 #include "stdafx.h"
 #include "Seed.h"
+#include "BaseSeq.h"
 
     bool
-Seed::DoesTextRepresentASeed(const char *textBases, unsigned seedLen)
+Seed::DoesTextRepresentASeed(const BaseRef *textBases, unsigned seedLen)
 {
     for (unsigned i = 0; i < seedLen; i++) {
-        switch (textBases[i]) {
-            case 'A':
-            case 'G':
-            case 'C':
-            case 'T':
+        switch (textBases->get(i)) {
+            case BaseSeq::BS_A:
+            case BaseSeq::BS_G:
+            case BaseSeq::BS_C:
+            case BaseSeq::BS_T:
                     break;
             default: return false;
         }

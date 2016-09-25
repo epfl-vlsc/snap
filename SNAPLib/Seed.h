@@ -27,6 +27,7 @@ Revision History:
 #include "Compat.h"
 #include "Tables.h"
 #include "Util.h"
+#include "BaseSeq.h"
 
 const unsigned LargestSeedSize = 32;
 
@@ -35,16 +36,16 @@ struct Seed {
     //
     // We exclude seeds with "N" in them.  This checks for that (or other garbage).
     //
-    static bool DoesTextRepresentASeed(const char *textBases, unsigned seedLen);
+    static bool DoesTextRepresentASeed(const BaseRef *textBases, unsigned seedLen);
 
-    inline Seed(const char *textBases, unsigned seedLen)
+    inline Seed(const BaseRef *textBases, unsigned seedLen)
     {
 
         bases = 0;
         reverseComplement = 0;
 
         for (unsigned i = 0; i < seedLen; i++) {
-            _uint64 encodedBase = BASE_VALUE[textBases[i]];
+            _uint64 encodedBase = BASE_VALUE[BaseSeq::RepToChar(textBases->get(i))]; // FIXMe JL
             _ASSERT(255 != encodedBase);
 
             bases |= encodedBase << ((seedLen - i - 1) * 2);
@@ -165,7 +166,7 @@ struct Seed {
         return (unsigned) hash64();
     }
 
-    static _uint64 hash64(const char* sequence, int length)
+    static _uint64 hash64(const BaseRef* sequence, int length)
     {
         if (length <= MaxBases) {
             Seed s(sequence, length);
@@ -173,13 +174,13 @@ struct Seed {
         } else {
             // string compare seq & reverse, hash smallest one
             for (int i = 0; i < length / 2; i++) {
-                char c = sequence[i];
-                char r = COMPLEMENT[sequence[length - 1 - i]];
+                char c = BaseSeq::RepToChar(sequence->get(i)); // FIXMe JL
+                char r = COMPLEMENT[BaseSeq::RepToChar(sequence->get(length - 1 - i))]; // FIXMe JL
                 if (c < r) {
                     return util::hash(sequence, length);
                 } else if (r < c) {
                     char* rc = (char*) alloca(length);
-                    util::toComplement(rc, sequence, length);
+                    util::toComplement(rc, sequence->toChars(), length); // FixME JL
                     return util::hash64(rc, length);
                 }
             }

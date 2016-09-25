@@ -26,6 +26,7 @@ Revision History:
 #include "Compat.h"
 #include "GenericFile.h"
 #include "GenericFile_map.h"
+#include "BaseSeq.h"
 
 //
 // We have two different classes to represent a place in a genome and a distance between places in a genome.
@@ -205,21 +206,21 @@ public:
         //
         // Methods to read the genome.
         //
-		inline const char *getSubstring(GenomeLocation location, GenomeDistance lengthNeeded) const {
+		inline const BaseRef *getSubstring(GenomeLocation location, GenomeDistance lengthNeeded) const {
 			if (location > nBases || location + lengthNeeded > nBases + N_PADDING) {
 				// The first part of the test is for the unsigned version of a negative offset.
 				return NULL;
 			}
 
 			// If we're in the padding, then the base will be an n, and we can't short circuit.  Recall that we use lower case n in the reference so it won't match with N in the read.
-			if (lengthNeeded <= chromosomePadding && bases[GenomeLocationAsInt64(location)] != 'n') {
-				return bases + (location - minLocation);
+			if (lengthNeeded <= chromosomePadding && bases->get(GenomeLocationAsInt64(location)) != 'n') {
+				return new BaseRef(bases, location - minLocation);
 			}
 
 			_ASSERT(location >= minLocation && location + lengthNeeded <= maxLocation + N_PADDING); // If the caller asks for a genome slice, it's only legal to look within it.
 
 			if (lengthNeeded == 0) {
-				return bases + (location - minLocation);
+				return new BaseRef(bases, location - minLocation);
 			}
 
 			const Contig *contig = getContigAtLocation(location);
@@ -232,7 +233,7 @@ public:
 				return NULL;
 			}
 
-			return bases + (location - minLocation);
+			return new BaseRef(bases, location - minLocation);
 		}
 
         inline GenomeDistance getCountOfBases() const {return nBases;}
@@ -276,7 +277,7 @@ private:
 
         //
         // The actual genome.
-        char                *bases;       // Will point to offset N_PADDING in an array of nBases + 2 * N_PADDING
+        BaseSeq              *bases;       // Will point to offset N_PADDING in an array of nBases + 2 * N_PADDING
         GenomeDistance       nBases;
         GenomeLocation       maxBases;
 

@@ -138,8 +138,8 @@ static const int PrevDelta[3][3] =  // Version that minimizes NET indels (ie., |
 #endif // 0
 
 int LandauVishkinWithCigar::computeEditDistance(
-    const char* text, int textLen,
-    const char* pattern, int patternLen,
+    const BaseRef* text, int textLen,
+    const BaseRef* pattern, int patternLen,
     int k,
     char *cigarBuf, int cigarBufLen, bool useM, 
     CigarFormat format, int* o_cigarBufUsed, int* o_textUsed,
@@ -159,26 +159,37 @@ int LandauVishkinWithCigar::computeEditDistance(
     
     _ASSERT(patternLen >= 0 && textLen >= 0);
     _ASSERT(k < MAX_K);
-    const char* p = pattern;
-    const char* t = text;
+    const BaseRef* p = pattern;
+    const BaseRef* t = text;
     char* cigarBufStart = cigarBuf;
     if (NULL == text) {
         return -1;            // This happens when we're trying to read past the end of the genome.
     }
 
     int end = min(patternLen, textLen);
-    const char* pend = pattern + end;
-    while (p < pend) {
-        _uint64 x = *((_uint64*) p) ^ *((_uint64*) t);
+    const BaseRef* pend = pattern + end;
+    while (p < pend) { // FixMe: JL
+        int skip = 0;
+        _uint64 p64 = *((_uint64*)p->getPtr());
+        _uint64 t64 = *((_uint64*)t->getPtr());
+        if (p->isUpperNibble()) {
+            p64 <<= 4;
+            skip = 1;
+        }
+        if (t->isUpperNibble()) {
+            p64 <<= 4;
+            skip = max(skip, 1);
+        }
+        _uint64 x = p64 ^ t64;
         if (x) {
             unsigned long zeroes;
             CountTrailingZeroes(x, zeroes);
-            zeroes >>= 3;
+            zeroes >>= 2;
             L[0][MAX_K] = min((int)(p - pattern) + (int)zeroes, end);
             goto done1;
         }
-        p += 8;
-        t += 8;
+        p += 8 - skip;
+        t += 8 - skip;
     }
     L[0][MAX_K] = end;
 done1:
@@ -233,27 +244,39 @@ done1:
                 if (best < 0) {
                     continue;
                 }
-                const char* p = pattern + best;
-                const char* t = (text + d) + best;
-                if (*p == *t) {
+                const BaseRef* p = pattern + best;
+                const BaseRef* t = (text + d) + best;
+                if (*p == *t) { // FixMe: JL
                     int end = min(patternLen, textLen - d);
-                    const char* pend = pattern + end;
+                    const BaseRef* pend = pattern + end;
 
                     while (true) {
-                        _uint64 x = *((_uint64*) p) ^ *((_uint64*) t);
+                        _uint64 x;
+                        int skip = 0;
+                        _uint64 p64 = *((_uint64 *) p->getPtr());
+                        _uint64 t64 = *((_uint64 *) t->getPtr());
+                        if (p->isUpperNibble()) {
+                            p64 <<= 4;
+                            skip = 1;
+                        }
+                        if (t->isUpperNibble()) {
+                            p64 <<= 4;
+                            skip = max(skip, 1);
+                        }
+                        x = p64 ^ t64;
                         if (x) {
                             unsigned long zeroes;
                             CountTrailingZeroes(x, zeroes);
-                            zeroes >>= 3;
-                            best = min((int)(p - pattern) + (int)zeroes, end);
+                            zeroes >>= 2;
+                            best = min((int) (p - pattern) + (int) zeroes, end);
                             break;
                         }
-                        p += 8;
-                        if (p >= pend) {
+                        p += 8 - skip;
+                        if (p >= pend) { // FIXMe: JL
                             best = end;
                             break;
                         }
-                        t += 8;
+                        t += 8 - skip;
                     }
                 }
                 if ((best > bestbest || best == bestbest) && bestIndels < bestBestIndels) {
@@ -300,7 +323,7 @@ got_answer:
 
 	int straightMismatches = 0;
 	for (int i = 0; i < end; i++) {
-		if (pattern[i] != text[i]) {
+		if (pattern->get(i) != text->get(i)) {
 			straightMismatches++;
 		}
 	}
@@ -504,8 +527,8 @@ got_answer:
 }
 
 int LandauVishkinWithCigar::computeEditDistanceNormalized(
-    const char* text, int textLen,
-    const char* pattern, int patternLen,
+    const BaseRef* text, int textLen,
+    const BaseRef* pattern, int patternLen,
     int k,
     char *cigarBuf, int cigarBufLen, bool useM,
     CigarFormat format, int* o_cigarBufUsed,
