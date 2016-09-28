@@ -1,6 +1,5 @@
 #pragma once
 #include "Compat.h"
-#include "FixedSizeMap.h"
 #include "BigAlloc.h"
 #include "exit.h"
 #include "Genome.h"
@@ -186,7 +185,7 @@ public:
 
             const BaseRef* p = pattern + best;
             const BaseRef* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
-            if (p->equal(t) && best >= 0) {
+            if (p->equal(t) && best >= 0 && best < patternLen) {
                 int end = __min(patternLen, textLen - d);
 
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
@@ -210,7 +209,7 @@ public:
             int right = L(e-1, d+1) + 1;
             p = pattern + right;
             t = (text + d * TEXT_DIRECTION) + right * TEXT_DIRECTION;
-            if (*p == *t && right >= 0) {
+            if (*p == *t && right >= 0 && right < patternLen) {
                 int end = __min(patternLen, textLen - d);
 
                 right += countPerfectMatch(p, t, (int)(end - (p - pattern)));

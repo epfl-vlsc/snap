@@ -27,8 +27,6 @@ Revision History:
 #include "BigAlloc.h"
 #include "Compat.h"
 #include "FASTA.h"
-#include "FixedSizeSet.h"
-#include "FixedSizeVector.h"
 #include "GenericFile.h"
 #include "GenericFile_stdio.h"
 #include "Genome.h"

@@ -1,5 +1,5 @@
 ifndef CXXFLAGS
-  CXXFLAGS = -O3 -Wall -Wno-char-subscripts
+  CXXFLAGS = -O3 -Wno-format -std=c++11
 endif
 
 CXXFLAGS += -MMD -ISNAPLib -msse
@@ -18,7 +18,7 @@ endif
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-  LIBS += -lrt -lz
+  LIBS += -lrt -lz -llttng-ust -ldl
 endif
 
 ifeq ($(UNAME), Darwin)
