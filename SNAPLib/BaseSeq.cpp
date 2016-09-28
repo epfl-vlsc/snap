@@ -5,8 +5,10 @@
 #include "Error.h"
 #include "BigAlloc.h"
 #include "BaseSeq.h"
+#include "limits.h"
 
 BYTE* BaseSeq::twoCharsToByte = NULL;
+short * BaseSeq::byteToTwoChars = NULL;
 
 BaseSeq::BaseSeq(uint64_t length) : repLength(length) {
     if (twoCharsToByte == NULL) {
@@ -115,6 +117,7 @@ BaseSeq::initializeRep(char *basesAsChars, uint64_t length) {
         rep[repIndex] = CharToRep(basesAsChars[length - 1]);
     }
 }
+    
 
 void
 BaseSeq::initializeTranslationTables() {
