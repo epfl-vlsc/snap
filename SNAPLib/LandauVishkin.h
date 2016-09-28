@@ -379,8 +379,7 @@ private:
 		    } else {
                 _uint64 p64 = *((_uint64*)p->getPtr());
                 _uint64 t64 = *((_uint64*)t->getPtr(-7));
-                _uint64 T = *(_uint64 *)(t - 7);
-			    _uint64 tSwap = NibbleSwapUI64(T);
+			    _uint64 tSwap = NibbleSwapUI64(t64);
 			    x = p64 ^ tSwap;
 		    }
 

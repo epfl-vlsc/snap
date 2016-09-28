@@ -7,6 +7,7 @@
 #include "BaseSeq.h"
 
 BYTE* BaseSeq::twoCharsToByte = NULL;
+short* BaseSeq::byteToTwoChars = NULL;
 
 BaseSeq::BaseSeq(uint64_t length) : repLength(length) {
     if (twoCharsToByte == NULL) {
