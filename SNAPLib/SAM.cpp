@@ -1070,9 +1070,9 @@ SAMFormat::createSAMLine(
       basesClippedBefore = fullLength - clippedLength - read->getFrontClippedLength();
       basesClippedAfter = read->getFrontClippedLength();
     } else {
-      memcpy(data, read->getUnclippedData(), read->getUnclippedLength());
+      memcpy(data, read->getUnclippedData().toChars(), read->getUnclippedLength());
       memcpy(quality, read->getUnclippedQuality(), read->getUnclippedLength());
-      clippedData = read->getData();
+      clippedData = read->getData().toChars();
       basesClippedBefore = read->getFrontClippedLength();
       basesClippedAfter = fullLength - clippedLength - basesClippedBefore;
     }
@@ -1363,7 +1363,8 @@ SAMFormat::computeCigar(
     // Apply the extra clipping.
     //
     genomeLocation += extraBasesClippedBefore;
-    data += extraBasesClippedBefore;
+    BaseRef dat = *data;
+    dat += extraBasesClippedBefore;
     dataLength -= extraBasesClippedBefore;
 
     const Genome::Contig *contig = genome->getContigAtLocation(genomeLocation);
@@ -1378,8 +1379,9 @@ SAMFormat::computeCigar(
         *o_extraBasesClippedAfter = 0;
     }
 
-    const BaseRef *reference = genome->getSubstring(genomeLocation, dataLength);
-    if (NULL == reference) {
+    BaseRef reference;
+    bool ret  = genome->getSubstring(genomeLocation, dataLength, reference);
+    if (false == ret) {
         //
         // Fell off the end of the contig.
         //
@@ -1391,9 +1393,9 @@ SAMFormat::computeCigar(
     }
 
     *o_editDistance = lv->computeEditDistanceNormalized(
-        reference,
+        &reference,
         (int)(dataLength - *o_extraBasesClippedAfter + MAX_K), // Add space incase of indels.  We know there's enough, because the reference is padded.
-        data,
+        &dat,
         (int)(dataLength - *o_extraBasesClippedAfter),
         MAX_K - 1,
         cigarBuf,
@@ -1427,9 +1429,9 @@ SAMFormat::computeCigar(
         *o_extraBasesClippedAfter = newExtraBasesClippedAfter;
 
         *o_editDistance = lv->computeEditDistanceNormalized(
-            reference,
+            &reference,
             (int)(dataLength - *o_extraBasesClippedAfter + MAX_K), // Add space incase of indels.  We know there's enough, because the reference is padded.
-            data,
+            &dat,
             (int)(dataLength - *o_extraBasesClippedAfter),
             MAX_K - 1,
             cigarBuf,
@@ -1514,7 +1516,9 @@ SAMFormat::computeCigarString(
         }
         snprintf(cigarBufWithClipping, cigarBufWithClippingLen, "%s%s%s%s%s", hardClipBefore, clipBefore, cigarBuf, clipAfter, hardClipAfter);
 
-		validateCigarString(genome, cigarBufWithClipping, cigarBufWithClippingLen, data - basesClippedBefore,
+        BaseRef dat = *data;
+        dat -= basesClippedBefore;
+		validateCigarString(genome, cigarBufWithClipping, cigarBufWithClippingLen, &dat,
                             dataLength + (basesClippedBefore + basesClippedAfter), genomeLocation + extraBasesClippedBefore, direction, useM);
 
         return cigarBufWithClipping;
@@ -1528,8 +1532,9 @@ SAMFormat::validateCigarString(
 {
 	const char *nextChunkOfCigar = cigarBuf;
 	GenomeDistance offsetInData = 0;
-	const char *reference = genome->getSubstring(genomeLocation, dataLength);
-	if (NULL == reference) {
+  BaseRef reference;
+	bool ret = genome->getSubstring(genomeLocation, dataLength, reference);
+	if (false == ret) {
 		WriteErrorMessage("validateCigarString: couldn't look up genome data for location %lld\n", genomeLocation);
 		soft_exit(1);
 	}

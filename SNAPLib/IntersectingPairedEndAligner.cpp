@@ -322,9 +322,10 @@ IntersectingPairedEndAligner::align(
 
             SetSeedUsed(nextSeedToTest);
 
-            BaseSeq* readSeq = new BaseSeq(seedLen, reads[whichRead][FORWARD]->getData() + nextSeedToTest, false); // FIXMe JL
-            BaseRef* readRef = new BaseRef(readSeq);
-            if (!Seed::DoesTextRepresentASeed(readRef, seedLen)) {
+            //BaseSeq* readSeq = new BaseSeq(seedLen, reads[whichRead][FORWARD]->getData() + nextSeedToTest, false); // FIXMe JL
+            //BaseRef* readRef = new BaseRef(readSeq);
+            BaseRef readRef = reads[whichRead][FORWARD]->getData() + nextSeedToTest;
+            if (!Seed::DoesTextRepresentASeed(&readRef, seedLen)) {
                 //
                 // It's got Ns in it, so just skip it.
                 //
@@ -332,7 +333,7 @@ IntersectingPairedEndAligner::align(
                 continue;
             }
 
-            Seed seed(readRef, seedLen);
+            Seed seed(&readRef, seedLen);
             //
             // Find all instances of this seed in the genome.
             //
@@ -977,7 +978,8 @@ IntersectingPairedEndAligner::scoreLocation(
     Read *readToScore = reads[whichRead][direction];
     unsigned readDataLength = readToScore->getDataLength();
     GenomeDistance genomeDataLength = readDataLength + MAX_K; // Leave extra space in case the read has deletions
-    const BaseRef *data = genome->getSubstring(genomeLocation, genomeDataLength);
+    BaseRef data;
+    bool ret = genome->getSubstring(genomeLocation, genomeDataLength, data);
 
 #if		0 // This only happens when genomeLocation is in the padding, which can lead to no good.  Just say no.
     if (NULL == data) {
@@ -1006,7 +1008,7 @@ IntersectingPairedEndAligner::scoreLocation(
 
 #endif // 0 This only happens when genomeLocation is in the padding, which can lead to no good.  Just say no.
 
-    if (NULL == data) {
+    if (false == ret) {
         *score = -1;
         *matchProbability = 0;
         return;
@@ -1023,7 +1025,7 @@ IntersectingPairedEndAligner::scoreLocation(
     int seedLen = index->getSeedLength();
     int tailStart = seedOffset + seedLen;
 
-    _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));    // that the seed actually matches
+    //_ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));    // that the seed actually matches
 
     int textLen;
     if (genomeDataLength - tailStart > INT32_MAX) {
@@ -1031,8 +1033,10 @@ IntersectingPairedEndAligner::scoreLocation(
     } else {
         textLen = (int)(genomeDataLength - tailStart);
     }
-        BaseSeq* readSeq = new BaseSeq(readLen - tailStart, readToScore->getData() + tailStart, false); // FIXMe: JL
-        score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, new BaseRef(readSeq), readToScore->getQuality() + tailStart, readLen - tailStart,
+        //BaseSeq* readSeq = new BaseSeq(readLen - tailStart, readToScore->getData() + tailStart, false); // FIXMe: JL
+        BaseRef dat = data + tailStart;
+        BaseRef seq = readToScore->getData() + tailStart;
+        score1 = landauVishkin->computeEditDistance(&dat, textLen, &seq, readToScore->getQuality() + tailStart, readLen - tailStart,
         scoreLimit, &matchProb1);
     if (score1 == -1) {
         *score = -1;
@@ -1040,7 +1044,8 @@ IntersectingPairedEndAligner::scoreLocation(
         // The tail of the read matched; now let's reverse the reference genome data and match the head
         int limitLeft = scoreLimit - score1;
         BaseSeq* readSeq = new BaseSeq(seedOffset, reversedRead[whichRead][direction] + readLen - seedOffset, false); // FIXMe: JL
-        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, new BaseRef(readSeq),
+        BaseRef dat = data + seedOffset;
+        score2 = reverseLandauVishkin->computeEditDistance(&dat, seedOffset + MAX_K, new BaseRef(readSeq),
                                                                     reads[whichRead][OppositeDirection(direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2, genomeLocationOffset);
 
         if (score2 == -1) {

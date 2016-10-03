@@ -934,22 +934,23 @@ GenomeIndex::ComputeBiasTable(const Genome* genome, int seedLen, double* table, 
             if (i % 100000000 == 0) {
                 WriteStatusMessage("Bias computation: %lld / %lld\n",(_int64)i, (_int64)countOfBases);
             }
-            const BaseRef *bases = genome->getSubstring(i,seedLen);
+            BaseRef bases;
+            bool ret = genome->getSubstring(i,seedLen, bases);
             //
             // Check it for NULL, because Genome won't return strings that cross contig boundaries.
             //
-            if (NULL == bases) {
+            if (false == ret) {
                 continue;
             }
 
             //
             // We don't build seeds out of sections of the genome that contain 'N.'  If this is one, skip it.
             //
-            if (!Seed::DoesTextRepresentASeed(bases, seedLen)) {
+            if (!Seed::DoesTextRepresentASeed(&bases, seedLen)) {
                 continue;
             }
 
-            Seed seed(bases, seedLen);
+            Seed seed(&bases, seedLen);
             validSeeds++;
 
 			if (large && seed.isBiggerThanItsReverseComplement()) {
@@ -1084,23 +1085,24 @@ GenomeIndex::ComputeBiasTableWorkerThreadMain(void *param)
     const _uint64 printBatchSize = 100000000;
     for (GenomeDistance i = context->genomeChunkStart; i < context->genomeChunkEnd; i++) {
 
-            const BaseRef *bases = context->genome->getSubstring(i, context->seedLen);
+            BaseRef bases;
+            bool ret = context->genome->getSubstring(i, context->seedLen, bases);
             //
             // Check it for NULL, because Genome won't return strings that cross contig boundaries.
             //
-            if (NULL == bases) {
+            if (false == ret) {
                 continue;
             }
 
             //
             // We don't build seeds out of sections of the genome that contain 'N.'  If this is one, skip it.
             //
-            if (!Seed::DoesTextRepresentASeed(bases, context->seedLen)) {
+            if (!Seed::DoesTextRepresentASeed(&bases, context->seedLen)) {
                 unrecordedSkippedSeeds++;
                 continue;
             }
 
-            Seed seed(bases, context->seedLen);
+            Seed seed(&bases, context->seedLen);
             validSeeds++;
 
 			if (large && seed.isBiggerThanItsReverseComplement()) {
@@ -1180,11 +1182,12 @@ GenomeIndex::BuildHashTablesWorkerThread(BuildHashTablesThreadContext *context)
     IndexBuildStats stats;
 
     for (GenomeLocation genomeLocation = context->genomeChunkStart; genomeLocation < context->genomeChunkEnd; genomeLocation++) {
-        const BaseRef *bases = genome->getSubstring(genomeLocation, seedLen);
+        BaseRef bases;
+        bool ret = genome->getSubstring(genomeLocation, seedLen, bases);
         //
         // Check it for NULL, because Genome won't return strings that cross contig boundaries.
         //
-        if (NULL == bases) {
+        if (false == ret) {
             stats.noBaseAvailable++;
             stats.unrecordedSkippedSeeds++;
             continue;
@@ -1193,13 +1196,13 @@ GenomeIndex::BuildHashTablesWorkerThread(BuildHashTablesThreadContext *context)
         //
         // We don't build seeds out of sections of the genome that contain 'N.'  If this is one, skip it.
         //
-        if (!Seed::DoesTextRepresentASeed(bases, seedLen)) {
+        if (!Seed::DoesTextRepresentASeed(&bases, seedLen)) {
             stats.nonSeeds++;
             stats.unrecordedSkippedSeeds++;
             continue;
         }
 
-		Seed seed(bases, seedLen);
+		Seed seed(&bases, seedLen);
 
         indexSeed(genomeLocation, seed, batches, context, &stats, large);
     } // For each genome base in our area

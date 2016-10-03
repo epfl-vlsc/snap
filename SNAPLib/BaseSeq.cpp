@@ -9,6 +9,7 @@
 
 BYTE* BaseSeq::twoCharsToByte = NULL;
 short* BaseSeq::byteToTwoChars = NULL;
+char BaseSeq::rcTable[256] = {'N'};
 
 BaseSeq::BaseSeq(uint64_t length) : repLength(length) {
     if (twoCharsToByte == NULL) {
@@ -142,4 +143,15 @@ BaseSeq::initializeTranslationTables() {
     }
     twoCharsToByte = table;
     byteToTwoChars = iTable;
+    
+    for (unsigned i = 0; i < 256; i++) {
+        rcTable[i] = 'N';
+    }
+
+    rcTable['A'] = 'T';
+    rcTable['G'] = 'C';
+    rcTable['C'] = 'G';
+    rcTable['T'] = 'A';
+    rcTable['N'] = 'N';
+
 }

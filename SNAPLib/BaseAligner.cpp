@@ -327,16 +327,17 @@ Return Value:
     memset(seedUsed, 0, (inputRead->getDataLength() + 7) / 8);
 
     unsigned readLen = inputRead->getDataLength();
-    const char *readData = inputRead->getData();
+    BaseRef readData = inputRead->getData();
     const char *readQuality = inputRead->getQuality();
+    quality[FORWARD] = readQuality;
     unsigned countOfNs = 0;
     for (unsigned i = 0; i < readLen; i++) {
         char baseByte = readData[i];
-        char complement = rcTranslationTable[baseByte];
-        rcReadData[readLen - i - 1] = complement;
+        //char complement = rcTranslationTable[baseByte];
+        //rcReadData[readLen - i - 1] = complement;
         rcReadQuality[readLen - i - 1] = readQuality[i];
-        reversedRead[FORWARD][readLen - i - 1] = baseByte;
-        reversedRead[RC][i] = complement;
+        //reversedRead[FORWARD][readLen - i - 1] = baseByte;
+        //reversedRead[RC][i] = complement;
         countOfNs += nTable[baseByte];
     }
 
@@ -350,9 +351,10 @@ Return Value:
     // Block off any seeds that would contain an N.
     //
     if (countOfNs > 0) {
+        BaseRef inputSeq = inputRead->getData();
         int minSeedToConsiderNing = 0; // In English, any word can be verbed. Including, apparently, "N."
         for (int i = 0; i < (int) readLen; i++) {
-            if (BASE_VALUE[readData[i]] > 3) {
+            if (BASE_VALUE[inputSeq[i]] > 3) {
                 int limit = __min(i + seedLen - 1, readLen-1);
                 for (int j = __max(minSeedToConsiderNing, i - (int) seedLen + 1); j <= limit; j++) {
                     SetSeedUsed(j);
@@ -364,11 +366,21 @@ Return Value:
         }
     }
 
-    Read reverseComplimentRead;
+    quality[RC] = rcReadQuality;
+    seq[FORWARD] = inputRead->getData();
+   
+    auto seqrc = inputRead->reverseComplement(rcReadData);
+    seq[RC] = BaseRef(&seqrc);
+    /*Read reverseComplimentRead;
     Read *read[NUM_DIRECTIONS];
     read[FORWARD] = inputRead;
     read[RC] = &reverseComplimentRead;
-    read[RC]->init(NULL, 0, rcReadData, rcReadQuality, readLen);
+    read[RC]->init(NULL, 0, inputRead->getData().reverseComplement(rcReadData, readLen), rcReadQuality, readLen);*/
+
+    auto revseqfwd = inputRead->reverse(reversedRead[FORWARD]);
+    auto revseqrc = seq[RC].getSeq()->reverse(reversedRead[RC], readLen);
+    reversedSeq[FORWARD] = BaseRef(&revseqfwd);
+    reversedSeq[RC] = BaseRef(&revseqrc);
 
     clearCandidates();
 
@@ -414,7 +426,7 @@ Return Value:
 #endif
                 score(
                     true,
-                    read,
+                    inputRead,
                     primaryResult,
                     maxEditDistanceForSecondaryResults,
                     secondaryResultBufferSize,
@@ -451,13 +463,12 @@ Return Value:
 
         SetSeedUsed(nextSeedToTest);
 
-        BaseSeq* readSeq = new BaseSeq(seedLen, read[FORWARD]->getData() + nextSeedToTest, false); // FIXMe JL
-        BaseRef* readRef = new BaseRef(readSeq);
-        if (!Seed::DoesTextRepresentASeed(readRef, seedLen)) {
+        BaseRef readRef = seq[FORWARD] + nextSeedToTest;
+        if (!Seed::DoesTextRepresentASeed(&readRef, seedLen)) {
             continue;
         }
 
-        Seed seed(readRef, seedLen);
+        Seed seed(&readRef, seedLen);
 
         _int64        nHits[NUM_DIRECTIONS];                // Number of times this seed hits in the genome
         const GenomeLocation  *hits[NUM_DIRECTIONS];        // The actual hits (of size nHits)
@@ -614,7 +625,7 @@ Return Value:
             //
             if (score(
                     false,
-                    read,
+                    inputRead,
                     primaryResult,
                     maxEditDistanceForSecondaryResults,
                     secondaryResultBufferSize,
@@ -639,7 +650,7 @@ Return Value:
 #endif
     score(
         true,
-        read,
+        inputRead,
         primaryResult,
         maxEditDistanceForSecondaryResults,
         secondaryResultBufferSize,
@@ -657,7 +668,7 @@ Return Value:
     bool
 BaseAligner::score(
         bool                     forceResult,
-        Read                    *read[NUM_DIRECTIONS],
+        Read                    *read,
         SingleAlignmentResult   *primaryResult,
         int                      maxEditDistanceForSecondaryResults,
         int                      secondaryResultBufferSize,
@@ -834,9 +845,10 @@ Return Value:
 
                 unsigned score = -1;
                 double matchProbability = 0;
-                unsigned readDataLength = read[elementToScore->direction]->getDataLength();
+                unsigned readDataLength = read->getDataLength();
                 GenomeDistance genomeDataLength = readDataLength + MAX_K; // Leave extra space in case the read has deletions
-                const BaseRef *data = genome->getSubstring(genomeLocation, genomeDataLength);
+                BaseRef data;
+                bool ret = genome->getSubstring(genomeLocation, genomeDataLength, data);
 
 #if 0 // This only happens when we're in the padding region, and genomeLocations there just lead to problems.  Just say no.
                 if (NULL == data) {
@@ -866,8 +878,8 @@ Return Value:
                 }
 
 #endif // 0
-                if (data != NULL) {
-                    Read *readToScore = read[elementToScore->direction];
+                if (ret != false) {
+                    Read *readToScore = read;
 
                     _ASSERT(candidateToScore->seedOffset + seedLen <= readToScore->getDataLength());
 
@@ -883,12 +895,13 @@ Return Value:
                     int seedOffset = candidateToScore->seedOffset; // Since the data is reversed
                     int tailStart = seedOffset + seedLen;
 
-                    _ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
+                    //_ASSERT(!memcmp(data+seedOffset, readToScore->getData() + seedOffset, seedLen));
 
                     int textLen = (int)__min(genomeDataLength - tailStart, 0x7ffffff0);
-                    BaseSeq* readSeq = new BaseSeq(readLen, readToScore->getData() + tailStart, false); // FixME JL
+                    BaseRef readRef = seq[elementToScore->direction] + tailStart;
+                    BaseRef dat = data + tailStart;
 
-                    score1 = landauVishkin->computeEditDistance(data + tailStart, textLen, new BaseRef(readSeq), readToScore->getQuality() + tailStart, readLen - tailStart,
+                    score1 = landauVishkin->computeEditDistance(&dat, textLen, &readRef, quality[elementToScore->direction] + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
 
                     if (score1 == -1) {
@@ -897,9 +910,10 @@ Return Value:
                         // The tail of the read matched; now let's reverse match the reference genome and the head
                         int limitLeft = scoreLimit - score1;
                         int genomeLocationOffset;
-                        BaseSeq* readSeq = new BaseSeq(readLen, reversedRead[elementToScore->direction] + readLen - seedOffset, false); // FixME JL
-                        score2 = reverseLandauVishkin->computeEditDistance(data + seedOffset, seedOffset + MAX_K, new BaseRef(readSeq),
-                                                                                    read[OppositeDirection(elementToScore->direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
+                        BaseRef readRef = reversedSeq[elementToScore->direction] + readLen - seedOffset;
+                        BaseRef dat = data + seedOffset;
+                        score2 = reverseLandauVishkin->computeEditDistance(&dat, seedOffset + MAX_K, &readRef,
+                                                                                    quality[OppositeDirection(elementToScore->direction)] + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
                                                                                     &genomeLocationOffset);
 
                         if (score2 == -1) {

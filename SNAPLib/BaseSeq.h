@@ -20,6 +20,7 @@ public:
     const static BYTE BS_N = 5;
     const static BYTE BS_n = 6;  // n is padding, but N is unknown bases. They are not the same.
 
+    BaseSeq() {}
     BaseSeq(uint64_t length);
     BaseSeq(uint64_t length, const char *bases, bool destructivelyReuseString);
 
@@ -30,6 +31,11 @@ public:
     inline  BYTE get(const uint64_t index) const {
         _ASSERT(index < repLength);
         return (BYTE) (index & 0x1 ? rep[index >> 1] >> 4 : rep[index >> 1] & 0xf);
+    }
+    
+    inline char getChar(const uint64_t index) const {
+        _ASSERT(index < repLength);
+        return RepToChar( (index & 0x1 ? rep[index >> 1] >> 4 : rep[index >> 1] & 0xf) );
     }
 
     inline const BYTE* getPtr(const uint64_t index) const {
@@ -44,6 +50,20 @@ public:
         } else {
             rep[index >> 1] = (BYTE) ((rep[index >> 1] & 0x0f) | (val & 0xf));
         }
+    }
+
+    inline BaseSeq reverseComplement(char * buffer, size_t length) {
+        for (size_t i = 0; i < length; i++) {
+          buffer[length - i - 1] = rcTable[getChar(i)];
+        }
+        return BaseSeq(length, buffer, true);
+    }
+    
+    inline BaseSeq reverse(char * buffer, size_t length) {
+        for (size_t i = 0; i < length; i++) {
+          buffer[length - i - 1] = getChar(i);
+        }
+        return BaseSeq(length, buffer, true);
     }
 
     void adjustStart(uint64_t offset);
@@ -104,6 +124,7 @@ public:
     }
 
 private:
+    static char rcTable[256];
     void initializeRep(char *basesAsChars, uint64_t length);
 
     void initializeTranslationTables();
@@ -122,6 +143,7 @@ class BaseRef {
     friend class BaseSeq;
 
 public:
+    BaseRef() : baseSequence(nullptr), offset(0) {};
     BaseRef(BaseSeq *bs) : baseSequence(bs), offset(0) {};
     BaseRef(BaseSeq *bs, uint64_t o) : baseSequence(bs), offset(o) {};
 
@@ -141,6 +163,10 @@ public:
         baseSequence = x.baseSequence;
         offset = x.offset;
         return *this;
+    }
+    
+    inline char operator[](int i) const {
+        return this->baseSequence->getChar(i);
     }
 
     inline bool operator==(const BaseRef &x) const {
@@ -194,13 +220,27 @@ public:
         return *this;
     }
 
-    inline BaseRef* operator+(int arg) {
-        return new BaseRef(baseSequence, offset + arg);
+    inline BaseRef operator+(int arg) {
+        return BaseRef(baseSequence, offset + arg);
     }
 
-    inline BaseRef* operator-(int arg) {
-        return new BaseRef(baseSequence, offset - arg);
+    inline BaseRef &operator+=(int arg) {
+        offset += arg;
+        return *this;
     }
+    
+    inline BaseRef &operator-=(int arg) {
+        offset -= arg;
+        return *this;
+    }
+
+    inline BaseRef operator-(int arg) {
+        return BaseRef(baseSequence, offset - arg);
+    }
+
+    uint64_t getOffset() { return offset; }
+
+    BaseSeq* getSeq() { return baseSequence; }
 
 private:
     BaseSeq *baseSequence;

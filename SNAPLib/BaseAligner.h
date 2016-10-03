@@ -116,6 +116,9 @@ private:
 
     bool hadBigAllocator;
 
+    BaseRef seq[NUM_DIRECTIONS];
+    BaseRef reversedSeq[NUM_DIRECTIONS];
+
     LandauVishkin<> *landauVishkin;
     LandauVishkin<-1> *reverseLandauVishkin;
     bool ownLandauVishkin;
@@ -264,7 +267,7 @@ private:
         bool
     score(
         bool                     forceResult,
-        Read                    *read[NUM_DIRECTIONS],
+        Read                    *read,
         SingleAlignmentResult   *primaryResult,
         int                      maxEditDistanceForSecondaryResults,
         int                      secondaryResultBufferSize,
@@ -305,6 +308,7 @@ private:
 
     char *rcReadData;
     char *rcReadQuality;
+    const char *quality[NUM_DIRECTIONS];
     char *reversedRead[NUM_DIRECTIONS];
 
     unsigned nTable[256];

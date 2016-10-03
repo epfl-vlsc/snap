@@ -206,34 +206,37 @@ public:
         //
         // Methods to read the genome.
         //
-		inline const BaseRef *getSubstring(GenomeLocation location, GenomeDistance lengthNeeded) const {
+		inline bool getSubstring(GenomeLocation location, GenomeDistance lengthNeeded, BaseRef& ref) const {
 			if (location > nBases || location + lengthNeeded > nBases + N_PADDING) {
 				// The first part of the test is for the unsigned version of a negative offset.
-				return NULL;
+				return false;
 			}
 
 			// If we're in the padding, then the base will be an n, and we can't short circuit.  Recall that we use lower case n in the reference so it won't match with N in the read.
 			if (lengthNeeded <= chromosomePadding && bases->get(GenomeLocationAsInt64(location)) != 'n') {
-				return new BaseRef(bases, location - minLocation);
+				ref = BaseRef(bases, location - minLocation);
+        return true;
 			}
 
 			_ASSERT(location >= minLocation && location + lengthNeeded <= maxLocation + N_PADDING); // If the caller asks for a genome slice, it's only legal to look within it.
 
 			if (lengthNeeded == 0) {
-				return new BaseRef(bases, location - minLocation);
+				ref = BaseRef(bases, location - minLocation);
+        return true;
 			}
 
 			const Contig *contig = getContigAtLocation(location);
 			if (NULL == contig) {
-				return NULL;
+				return false;
 			}
 
 			_ASSERT(contig->beginningLocation <= location && contig->beginningLocation + contig->length >= location);
 			if (contig->beginningLocation + contig->length <= location + lengthNeeded) {
-				return NULL;
+				return false;
 			}
 
-			return new BaseRef(bases, location - minLocation);
+      ref = BaseRef(bases, location - minLocation);
+			return true;
 		}
 
         inline GenomeDistance getCountOfBases() const {return nBases;}
