@@ -48,9 +48,9 @@ public:
     inline void put(const uint64_t index, const BYTE val) {
         _ASSERT(index < repLength);
         if (index & 0x1) {
-            rep[index >> 1] = (BYTE) ((rep[index >> 1] & 0xf0) | (val << 4));
+            rep[index >> 1] = (BYTE) ((rep[index >> 1] & 0xf) | (val << 4));
         } else {
-            rep[index >> 1] = (BYTE) ((rep[index >> 1] & 0x0f) | (val & 0xf));
+            rep[index >> 1] = (BYTE) ((rep[index >> 1] & 0xf0) | (val & 0xf));
         }
     }
 
