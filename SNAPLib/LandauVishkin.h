@@ -399,23 +399,28 @@ private:
 
 	    BaseRef pBase = p;
 	    BaseRef pend = p + availBytes;
+      _uint64 p_offset, t_offset;
+      _uint64 x;
+      int skip;
 
       while (true) {
-        _uint64 x;
-        int skip = 0;
+        skip = 0;
+        p_offset = p.getOffset();
+        t_offset = t.getOffset();
+
         if (TEXT_DIRECTION == 1) {
           _uint64 p64 = *((_uint64*)p.getPtr());
           _uint64 t64 = *((_uint64*)t.getPtr());
-          p64 <<= (p.offset & 0x1) << 2;
-          skip = (p.offset & 0x1);
-          t64 <<= (t.offset & 0x1) << 2;
-          if (p.offset & 0x1)
+          p64 <<= (p_offset & 0x1) << 2;
+          skip = (p_offset & 0x1);
+          t64 <<= (t_offset & 0x1) << 2;
+          if (p_offset & 0x1)
             t64 &= 0xfffffffffffffff0;
           x = p64 ^ t64;
         } else {
           _uint64 p64 = *((_uint64*)p.getPtr());
-          p64 <<= (p.offset & 0x1) << 2;
-          skip = (p.offset & 0x1);
+          p64 <<= (p_offset & 0x1) << 2;
+          skip = (p_offset & 0x1);
           _uint64 t64 = *((_uint64*)t.getPtr(-15));
           _uint64 tSwap = NibbleSwapUI64(t64);
           if (!(t.getOffset() & 0x1) || p.getOffset() & 0x1)
@@ -427,7 +432,7 @@ private:
           unsigned long zeroes;
           CountTrailingZeroes(x, zeroes);
           zeroes >>= 2;
-          return __min((int)(p.getOffset() - pBase.getOffset()) + (int)zeroes, availBytes);
+          return __min((int)(p_offset - pBase.getOffset()) + (int)zeroes, availBytes);
         } // if (x)
 
         p += 8 - skip;
