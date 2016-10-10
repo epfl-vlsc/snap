@@ -382,6 +382,9 @@ Return Value:
     reversedSeq[FORWARD] = BaseRef(&revseqfwd);
     reversedSeq[RC] = BaseRef(&revseqrc);
 
+    printf("base read: %s\n", inputRead->getData().toChars());
+    printf("read: %s\nrev read: %s\nrc: %s\nrev rc: %s\n", seq[FORWARD].toChars(), reversedSeq[FORWARD].toChars(), 
+        seq[RC].toChars(), reversedSeq[RC].toChars());
     clearCandidates();
 
     //
@@ -901,8 +904,10 @@ Return Value:
                     BaseRef readRef = seq[elementToScore->direction] + tailStart;
                     BaseRef dat = data + tailStart;
 
-                    score1 = landauVishkin->computeEditDistance(&dat, textLen, &readRef, quality[elementToScore->direction] + tailStart, readLen - tailStart,
+                    printf("tailstart: %d\n", tailStart);
+                    score1 = landauVishkin->computeEditDistance(dat, textLen, readRef, quality[elementToScore->direction] + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
+                    printf("score1: %d\n", score1);
 
                     if (score1 == -1) {
                         score = -1;
@@ -912,10 +917,12 @@ Return Value:
                         int genomeLocationOffset;
                         BaseRef readRef = reversedSeq[elementToScore->direction] + readLen - seedOffset;
                         BaseRef dat = data + seedOffset;
-                        score2 = reverseLandauVishkin->computeEditDistance(&dat, seedOffset + MAX_K, &readRef,
+                        printf("seedoffset: %d\n", seedOffset);
+                        score2 = reverseLandauVishkin->computeEditDistance(dat, seedOffset + MAX_K, readRef,
                                                                                     quality[OppositeDirection(elementToScore->direction)] + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
                                                                                     &genomeLocationOffset);
-
+                        printf("score2: %d\n", score2);
+  
                         if (score2 == -1) {
                             score = -1;
                         } else {

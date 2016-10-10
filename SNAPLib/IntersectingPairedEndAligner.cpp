@@ -1036,7 +1036,7 @@ IntersectingPairedEndAligner::scoreLocation(
         //BaseSeq* readSeq = new BaseSeq(readLen - tailStart, readToScore->getData() + tailStart, false); // FIXMe: JL
         BaseRef dat = data + tailStart;
         BaseRef seq = readToScore->getData() + tailStart;
-        score1 = landauVishkin->computeEditDistance(&dat, textLen, &seq, readToScore->getQuality() + tailStart, readLen - tailStart,
+        score1 = landauVishkin->computeEditDistance(dat, textLen, seq, readToScore->getQuality() + tailStart, readLen - tailStart,
         scoreLimit, &matchProb1);
     if (score1 == -1) {
         *score = -1;
@@ -1045,7 +1045,7 @@ IntersectingPairedEndAligner::scoreLocation(
         int limitLeft = scoreLimit - score1;
         BaseSeq* readSeq = new BaseSeq(seedOffset, reversedRead[whichRead][direction] + readLen - seedOffset, false); // FIXMe: JL
         BaseRef dat = data + seedOffset;
-        score2 = reverseLandauVishkin->computeEditDistance(&dat, seedOffset + MAX_K, new BaseRef(readSeq),
+        score2 = reverseLandauVishkin->computeEditDistance(dat, seedOffset + MAX_K, BaseRef(readSeq),
                                                                     reads[whichRead][OppositeDirection(direction)]->getQuality() + readLen - seedOffset, seedOffset, limitLeft, &matchProb2, genomeLocationOffset);
 
         if (score2 == -1) {

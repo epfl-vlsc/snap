@@ -24,18 +24,20 @@ public:
     BaseSeq(uint64_t length);
     BaseSeq(uint64_t length, const char *bases, bool destructivelyReuseString);
 
+    uint64_t length() { return repLength; }
+
     char* toChars(uint64_t offset);
 
     void dealloc(void* memory);
 
     inline  BYTE get(const uint64_t index) const {
         _ASSERT(index < repLength);
-        return (BYTE) (index & 0x1 ? rep[index >> 1] >> 4 : rep[index >> 1] & 0xf);
+        return (BYTE) (index & 0x1 ? rep[index >> 1] & 0xf : rep[index >> 1] >> 4 );
     }
     
     inline char getChar(const uint64_t index) const {
         _ASSERT(index < repLength);
-        return RepToChar( (index & 0x1 ? rep[index >> 1] >> 4 : rep[index >> 1] & 0xf) );
+        return RepToChar( (index & 0x1 ? rep[index >> 1] >> 4 : rep[index >> 1] & 0xf ) );
     }
 
     inline const BYTE* getPtr(const uint64_t index) const {
@@ -129,7 +131,7 @@ private:
 
     void initializeTranslationTables();
     static BYTE *twoCharsToByte;
-    static short *byteToTwoChars;
+    static unsigned short *byteToTwoChars;
 
     BYTE *rep; // sequence of nibbles (4 bits)
 
@@ -166,7 +168,7 @@ public:
     }
     
     inline char operator[](int i) const {
-        return this->baseSequence->getChar(i);
+        return this->baseSequence->getChar(i+offset);
     }
 
     inline bool operator==(const BaseRef &x) const {
@@ -185,7 +187,7 @@ public:
     }
 
     char* toChars() const {
-        return baseSequence->toChars(0);
+        return baseSequence->toChars(offset);
     }
 
     // Can't overload pointer dereference operator (*), so need to explicitly get/put
@@ -219,6 +221,11 @@ public:
         offset++;
         return *this;
     }
+    
+    inline BaseRef &operator--() {
+        offset--;
+        return *this;
+    }
 
     inline BaseRef operator+(int arg) {
         return BaseRef(baseSequence, offset + arg);
@@ -241,6 +248,8 @@ public:
     uint64_t getOffset() { return offset; }
 
     BaseSeq* getSeq() { return baseSequence; }
+
+    bool outOfRange() { return offset > baseSequence->length(); }
 
 private:
     BaseSeq *baseSequence;

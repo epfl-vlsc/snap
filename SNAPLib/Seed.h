@@ -45,7 +45,7 @@ struct Seed {
         reverseComplement = 0;
 
         for (unsigned i = 0; i < seedLen; i++) {
-            _uint64 encodedBase = BASE_VALUE[BaseSeq::RepToChar(textBases->get(i))]; // FIXMe JL
+            _uint64 encodedBase = BASE_VALUE[(*textBases)[i]]; // FIXMe JL
             _ASSERT(255 != encodedBase);
 
             bases |= encodedBase << ((seedLen - i - 1) * 2);

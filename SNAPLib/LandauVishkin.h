@@ -3,6 +3,7 @@
 #include "BigAlloc.h"
 #include "exit.h"
 #include "Genome.h"
+#include "BaseSeq.h"
 
 const int MAX_K = 63;
 
@@ -110,9 +111,9 @@ public:
 	//
 
     int computeEditDistance(
-                const BaseRef* text,
+                BaseRef text,
                 int textLen, 
-                const BaseRef* pattern,
+                BaseRef pattern,
                 const char *qualityString,
                 int patternLen,
                 int k,
@@ -133,8 +134,9 @@ public:
     *o_netIndel = 0;
 
     k = __min(MAX_K - 1, k); // enforce limit even in non-debug builds
-    if (NULL == text) {
+    if (text.outOfRange()) {
         // This happens when we're trying to read past the end of the genome.
+        //WriteErrorMessage("text was out of range!\n");
         if (NULL != matchProbability) {
             *matchProbability = 0.0;
         }
@@ -149,11 +151,11 @@ public:
     }
 
     if (TEXT_DIRECTION == -1) {
-        text--; // so now it points at the "first" character of t, not after it.
+        text -= 1; // so now it points at the "first" character of t, not after it.
     }
 
-    const BaseRef* p = pattern;
-    const BaseRef* t = text;
+    BaseRef p = pattern;
+    BaseRef t = text;
     int end = __min(patternLen, textLen);
 
     L(0, 0) = countPerfectMatch(p, t, end);
@@ -183,22 +185,22 @@ public:
             int best = L(e-1, d) + 1; // up
             A(e, d) = 'X';
 
-            const BaseRef* p = pattern + best;
-            const BaseRef* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
-            if (p->equal(t) && best >= 0 && best < patternLen) {
+            BaseRef p = pattern + best;
+            BaseRef t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
+            if (p[0] == t[0] && best >= 0 && best < patternLen) {
                 int end = __min(patternLen, textLen - d);
 
-                best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
+                best += countPerfectMatch(p, t, (int)(end - (p.getOffset() - pattern.getOffset())));
             }
 
 
             int left = L(e-1, d-1);
             p = pattern + left;
             t = (text + d * TEXT_DIRECTION) + left * TEXT_DIRECTION;
-            if (*p == *t && left >= 0) {
+            if (p[0] == t[0] && left >= 0) {
                 int end = __min(patternLen, textLen - d);
 
-                left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
+                left += countPerfectMatch(p, t, (int)(end - (p.getOffset() - pattern.getOffset())));
             }
 
             if (left > best) {
@@ -209,10 +211,10 @@ public:
             int right = L(e-1, d+1) + 1;
             p = pattern + right;
             t = (text + d * TEXT_DIRECTION) + right * TEXT_DIRECTION;
-            if (*p == *t && right >= 0 && right < patternLen) {
+            if (p[0] == t[0] && right >= 0 && right < patternLen) {
                 int end = __min(patternLen, textLen - d);
 
-                right += countPerfectMatch(p, t, (int)(end - (p - pattern)));
+                right += countPerfectMatch(p, t, (int)(end - (p.getOffset() - pattern.getOffset())));
             }
 
             if (right > best) {
@@ -356,46 +358,85 @@ private:
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
     // or first character beyond the end.
     //
-    inline int countPerfectMatch(const BaseRef *& p, const BaseRef *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
+    inline int cpmAligned(BaseRef& p, BaseRef& t, int availBytes) {
+	    BaseRef pBase = p;
+	    BaseRef pend = p + availBytes;
+      
+      while (true) {
+        _uint64 x;
+        int skip = 0;
+        if (TEXT_DIRECTION == 1) {
+          _uint64 p64 = *((_uint64*)p.getPtr());
+          _uint64 t64 = *((_uint64*)t.getPtr());
+          x = p64 ^ t64;
+        } else {
+          _uint64 p64 = *((_uint64*)p.getPtr());
+          _uint64 t64 = *((_uint64*)t.getPtr(-15));
+          _uint64 tSwap = NibbleSwapUI64(t64);
+          x = p64 ^ tSwap;
+        }
+
+        if (x) {
+          unsigned long zeroes;
+          CountTrailingZeroes(x, zeroes);
+          zeroes >>= 2;
+          return __min((int)(p.getOffset() - pBase.getOffset()) + (int)zeroes, availBytes);
+        } // if (x)
+
+        p += 16;
+        if (p.getOffset() >= pend.getOffset()) { // FixMe: JL
+          return availBytes;
+        }
+
+        t += 16 * TEXT_DIRECTION;
+      } // while true
+
+	    return 0;
+    }
+
+    inline int countPerfectMatch(BaseRef& p, BaseRef& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
-	    const BaseRef *pBase = p;
-	    const BaseRef *pend = p + availBytes;
-	    while (true) {
-		    _uint64 x;
-            int skip = 0;
-		    if (TEXT_DIRECTION == 1) {
-                _uint64 p64 = *((_uint64*)p->getPtr());
-                _uint64 t64 = *((_uint64*)t->getPtr());
-                if (p->isUpperNibble()) {
-                    p64 <<= 4;
-                    skip = 1;
-                }
-                if (t->isUpperNibble()) {
-                    p64 <<= 4;
-                    skip = max(skip, 1);
-                }
-                x = p64 ^ t64;
-		    } else {
-                _uint64 p64 = *((_uint64*)p->getPtr());
-                _uint64 t64 = *((_uint64*)t->getPtr(-7));
-			    _uint64 tSwap = NibbleSwapUI64(t64);
-			    x = p64 ^ tSwap;
-		    }
 
-		    if (x) {
-			    unsigned long zeroes;
-			    CountTrailingZeroes(x, zeroes);
-			    zeroes >>= 2;
-			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
-		    } // if (x)
+	    BaseRef pBase = p;
+	    BaseRef pend = p + availBytes;
 
-		    p += 8 - skip;
-		    if (p >= pend) { // FixMe: JL
-			    return availBytes;
-		    }
+      while (true) {
+        _uint64 x;
+        int skip = 0;
+        if (TEXT_DIRECTION == 1) {
+          _uint64 p64 = *((_uint64*)p.getPtr());
+          _uint64 t64 = *((_uint64*)t.getPtr());
+          p64 <<= (p.offset & 0x1) << 2;
+          skip = (p.offset & 0x1);
+          t64 <<= (t.offset & 0x1) << 2;
+          if (p.offset & 0x1)
+            t64 &= 0xfffffffffffffff0;
+          x = p64 ^ t64;
+        } else {
+          _uint64 p64 = *((_uint64*)p.getPtr());
+          p64 <<= (p.offset & 0x1) << 2;
+          skip = (p.offset & 0x1);
+          _uint64 t64 = *((_uint64*)t.getPtr(-15));
+          _uint64 tSwap = NibbleSwapUI64(t64);
+          if (!(t.getOffset() & 0x1) || p.getOffset() & 0x1)
+            t64 &= 0xfffffffffffffff0;
+          x = p64 ^ tSwap;
+        }
 
-		    t += (8 - skip) * TEXT_DIRECTION;
-	    } // while true
+        if (x) {
+          unsigned long zeroes;
+          CountTrailingZeroes(x, zeroes);
+          zeroes >>= 2;
+          return __min((int)(p.getOffset() - pBase.getOffset()) + (int)zeroes, availBytes);
+        } // if (x)
+
+        p += 8 - skip;
+        if (p.getOffset() >= pend.getOffset()) { // FixMe: JL
+          return availBytes;
+        }
+
+        t += (8 - skip) * TEXT_DIRECTION;
+      } // while true
 
 	    return 0;
     }
