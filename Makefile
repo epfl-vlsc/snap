@@ -45,8 +45,9 @@ ALL_OBJ = $(LIB_OBJ) $(SNAP_OBJ) $(TEST_OBJ) $(SNAPCOMMAND_OBJ)
 DEPS = $(pathsubst %.o, %.d, $(ALL_OBJ))
 
 EXES = snap-aligner unit_tests SNAPCommand
+EXES_NO_TESTS = snap-aligner SNAPCommand
 
-default: $(EXES)
+default: $(EXES_NO_TESTS)
 
 -include $(pathsubst %.o, %.d, $(ALL_OBJ))
 
