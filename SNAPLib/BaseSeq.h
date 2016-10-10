@@ -191,7 +191,7 @@ public:
     }
 
     // Can't overload pointer dereference operator (*), so need to explicitly get/put
-    inline const BYTE get() {
+    inline const BYTE get() const {
         return baseSequence->get(offset);
     }
 
@@ -245,11 +245,11 @@ public:
         return BaseRef(baseSequence, offset - arg);
     }
 
-    uint64_t getOffset() { return offset; }
+    uint64_t getOffset() const { return offset; }
 
     BaseSeq* getSeq() { return baseSequence; }
 
-    bool outOfRange() { return offset > baseSequence->length(); }
+    bool outOfRange() const { return offset > baseSequence->length(); }
 
 private:
     BaseSeq *baseSequence;
