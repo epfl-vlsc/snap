@@ -1225,8 +1225,10 @@ SAMFormat::writeRead(
     }
 
 	if (genomeLocation != InvalidGenomeLocation) {
+    BaseSeq bs(clippedLength, clippedData, false);
+    BaseRef br(&bs);
 		cigar = computeCigarString(context.genome, lv, cigarBuf, cigarBufSize, cigarBufWithClipping, cigarBufWithClippingSize,
-			new BaseRef(new BaseSeq(clippedLength, clippedData, false)), clippedLength, basesClippedBefore, extraBasesClippedBefore, basesClippedAfter, // FIXMe: JL
+			&br, clippedLength, basesClippedBefore, extraBasesClippedBefore, basesClippedAfter, // FIXMe: JL
 			read->getOriginalFrontHardClipping(), read->getOriginalBackHardClipping(), genomeLocation, direction, useM,
 			&editDistance, o_addFrontClipping);
 		if (*o_addFrontClipping != 0) {
