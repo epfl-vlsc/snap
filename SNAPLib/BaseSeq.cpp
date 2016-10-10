@@ -142,7 +142,7 @@ BaseSeq::initializeTranslationTables() {
         for (unsigned int i2 = 0; i2 <= UCHAR_MAX; i2++) {
             BYTE c1 = CharToRep((char) i1);
             BYTE c2 = CharToRep((char) i2);
-            if (c1 == 0 || c2 == 0) {
+            if (c1 == BS_uninit || c2 == BS_uninit) {
                 continue;
             }
             table[i1 * (UCHAR_MAX + 1) + i2] = (c1 << 4) | c2;
