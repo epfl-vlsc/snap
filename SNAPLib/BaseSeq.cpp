@@ -16,7 +16,7 @@ BaseSeq::BaseSeq(uint64_t length) : repLength(length) {
         initializeTranslationTables();
     }
     uint64_t sizeInBytes = length / 2 + (length & 1);
-    rep = (BYTE *) BigAlloc(length / 2 + (length & 1));
+    rep = (BYTE *) new BYTE[length / 2 + (length & 1)];
     if (rep == NULL) {
         WriteErrorMessage("BaseSequence::BaseSequence: unable to allocate memory\n");
         soft_exit(1);
@@ -106,7 +106,7 @@ BaseSeq::baseSet(uint64_t start, const char* fill, uint64_t length) {
 
 void
 BaseSeq::initializeRep(char *basesAsChars, uint64_t length) {
-    printf("initializing rep!\n");
+    //printf("initializing rep!\n");
     unsigned short *basesAsShorts = (unsigned short *) basesAsChars;  // 2 bases = 2 chars -> 1 byte
     uint64_t lengthInShorts = length / 2;
     uint64_t repIndex = 0;

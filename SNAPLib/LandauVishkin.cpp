@@ -138,8 +138,8 @@ static const int PrevDelta[3][3] =  // Version that minimizes NET indels (ie., |
 #endif // 0
 
 int LandauVishkinWithCigar::computeEditDistance(
-    const BaseRef* text, int textLen,
-    const BaseRef* pattern, int patternLen,
+    BaseRef text, int textLen,
+    BaseRef pattern, int patternLen,
     int k,
     char *cigarBuf, int cigarBufLen, bool useM, 
     CigarFormat format, int* o_cigarBufUsed, int* o_textUsed,
@@ -159,37 +159,42 @@ int LandauVishkinWithCigar::computeEditDistance(
     
     _ASSERT(patternLen >= 0 && textLen >= 0);
     _ASSERT(k < MAX_K);
-    const BaseRef* p = pattern;
-    const BaseRef* t = text;
+    BaseRef p = pattern;
+    BaseRef t = text;
     char* cigarBufStart = cigarBuf;
-    if (NULL == text) {
+    if (text.outOfRange()) {
         return -1;            // This happens when we're trying to read past the end of the genome.
     }
 
     int end = min(patternLen, textLen);
-    const BaseRef* pend = pattern + end;
-    while (p < pend) { // FixMe: JL
+    BaseRef pend = pattern + end;
+    while (p.getOffset() < pend.getOffset()) { // FixMe: JL
         int skip = 0;
-        _uint64 p64 = *((_uint64*)p->getPtr());
-        _uint64 t64 = *((_uint64*)t->getPtr());
-        if (p->isUpperNibble()) {
-            p64 <<= 4;
-            skip = 1;
-        }
-        if (t->isUpperNibble()) {
-            p64 <<= 4;
-            skip = max(skip, 1);
-        }
+        _uint64 p64 = *((_uint64*)p.getPtr());
+        _uint64 t64 = *((_uint64*)t.getPtr());
+        p64 >>= (p.getOffset() & 0x1) << 2;
+        skip = (p.getOffset() & 0x1);
+        if (skip)
+          if (t.getOffset() & 0x1)
+            t64 >>= 4;
+          else
+            t64 &= 0x0fffffffffffffff;
+        else 
+          if (t.getOffset() & 0x1) {
+            t64 >>= 4;
+            p64 &= 0x0fffffffffffffff;
+          }
+
         _uint64 x = p64 ^ t64;
         if (x) {
             unsigned long zeroes;
             CountTrailingZeroes(x, zeroes);
             zeroes >>= 2;
-            L[0][MAX_K] = min((int)(p - pattern) + (int)zeroes, end);
+            L[0][MAX_K] = min((int)(p.getOffset() - pattern.getOffset()) + (int)zeroes, end);
             goto done1;
         }
-        p += 8 - skip;
-        t += 8 - skip;
+        p += 16 - skip;
+        t += 16 - skip;
     }
     L[0][MAX_K] = end;
 done1:
@@ -244,39 +249,43 @@ done1:
                 if (best < 0) {
                     continue;
                 }
-                const BaseRef* p = pattern + best;
-                const BaseRef* t = (text + d) + best;
-                if (*p == *t) { // FixMe: JL
+                BaseRef p = pattern + best;
+                BaseRef t = (text + d) + best;
+                if (p[0] == t[0]) { // FixMe: JL
                     int end = min(patternLen, textLen - d);
-                    const BaseRef* pend = pattern + end;
+                    BaseRef pend = pattern + end;
 
                     while (true) {
                         _uint64 x;
                         int skip = 0;
-                        _uint64 p64 = *((_uint64 *) p->getPtr());
-                        _uint64 t64 = *((_uint64 *) t->getPtr());
-                        if (p->isUpperNibble()) {
-                            p64 <<= 4;
-                            skip = 1;
-                        }
-                        if (t->isUpperNibble()) {
-                            p64 <<= 4;
-                            skip = max(skip, 1);
-                        }
+                        _uint64 p64 = *((_uint64 *) p.getPtr());
+                        _uint64 t64 = *((_uint64 *) t.getPtr());
+                        p64 >>= (p.getOffset() & 0x1) << 2;
+                        skip = (p.getOffset() & 0x1);
+                        if (skip)
+                          if (t.getOffset() & 0x1)
+                            t64 >>= 4;
+                          else
+                            t64 &= 0x0fffffffffffffff;
+                        else 
+                          if (t.getOffset() & 0x1) {
+                            t64 >>= 4;
+                            p64 &= 0x0fffffffffffffff;
+                          }
                         x = p64 ^ t64;
                         if (x) {
                             unsigned long zeroes;
                             CountTrailingZeroes(x, zeroes);
                             zeroes >>= 2;
-                            best = min((int) (p - pattern) + (int) zeroes, end);
+                            best = min((int) (p.getOffset() - pattern.getOffset()) + (int) zeroes, end);
                             break;
                         }
-                        p += 8 - skip;
-                        if (p >= pend) { // FIXMe: JL
+                        p += 16 - skip;
+                        if (p.getOffset() >= pend.getOffset()) { // FIXMe: JL
                             best = end;
                             break;
                         }
-                        t += 8 - skip;
+                        t += 16 - skip;
                     }
                 }
                 if ((best > bestbest || best == bestbest) && bestIndels < bestBestIndels) {
@@ -323,7 +332,7 @@ got_answer:
 
 	int straightMismatches = 0;
 	for (int i = 0; i < end; i++) {
-		if (pattern->get(i) != text->get(i)) {
+		if (pattern[i] != text[i]) {
 			straightMismatches++;
 		}
 	}
@@ -527,8 +536,8 @@ got_answer:
 }
 
 int LandauVishkinWithCigar::computeEditDistanceNormalized(
-    const BaseRef* text, int textLen,
-    const BaseRef* pattern, int patternLen,
+    BaseRef text, int textLen,
+    BaseRef pattern, int patternLen,
     int k,
     char *cigarBuf, int cigarBufLen, bool useM,
     CigarFormat format, int* o_cigarBufUsed,

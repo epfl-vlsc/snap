@@ -382,9 +382,9 @@ Return Value:
     reversedSeq[FORWARD] = BaseRef(&revseqfwd);
     reversedSeq[RC] = BaseRef(&revseqrc);
 
-    printf("base read: %s\n", inputRead->getData().toChars());
-    printf("read: %s\nrev read: %s\nrc: %s\nrev rc: %s\n", seq[FORWARD].toChars(), reversedSeq[FORWARD].toChars(), 
-        seq[RC].toChars(), reversedSeq[RC].toChars());
+    //printf("base read: %s\n", inputRead->getData().toChars());
+    //printf("read: %s\nrev read: %s\nrc: %s\nrev rc: %s\n", seq[FORWARD].toChars(), reversedSeq[FORWARD].toChars(), 
+        //seq[RC].toChars(), reversedSeq[RC].toChars());
     clearCandidates();
 
     //
@@ -441,6 +441,7 @@ Return Value:
                                             primaryResult->score, primaryResult->mapq, probabilityOfBestCandidate, probabilityOfAllCandidates, primaryResult->location);
 #endif  // _DEBUG
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+                //printf("\tFinal result score %d MAPQ %d (%e probability of best candidate, %e probability of all candidates) at %u\n", primaryResult->score, primaryResult->mapq, probabilityOfBestCandidate, probabilityOfAllCandidates, primaryResult->location);
                 return;
             }
             nextSeedToTest = GetWrappedNextSeedToTest(seedLen, wrapCount);
@@ -640,6 +641,7 @@ Return Value:
 #endif  // _DEBUG
 
                 finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+                //printf("\tFinal result score %d MAPQ %d (%e probability of best candidate, %e probability of all candidates) at %u\n", primaryResult->score, primaryResult->mapq, probabilityOfBestCandidate, probabilityOfAllCandidates, primaryResult->location);
                 return;
             }
         }
@@ -665,6 +667,7 @@ Return Value:
 #endif  // _DEBUG
 
     finalizeSecondaryResults(*primaryResult, nSecondaryResults, secondaryResults, maxSecondaryResults, maxEditDistanceForSecondaryResults, bestScore);
+    //printf("\tFinal result score %d MAPQ %d (%e probability of best candidate, %e probability of all candidates) at %u\n", primaryResult->score, primaryResult->mapq, probabilityOfBestCandidate, probabilityOfAllCandidates, primaryResult->location);
     return;
 }
 
@@ -904,10 +907,9 @@ Return Value:
                     BaseRef readRef = seq[elementToScore->direction] + tailStart;
                     BaseRef dat = data + tailStart;
 
-                    printf("tailstart: %d\n", tailStart);
                     score1 = landauVishkin->computeEditDistance(dat, textLen, readRef, quality[elementToScore->direction] + tailStart, readLen - tailStart,
                         scoreLimit, &matchProb1);
-                    printf("score1: %d\n", score1);
+                    //printf("lv fwd %d returned : %d\n", lvfwd, score1);
 
                     if (score1 == -1) {
                         score = -1;
@@ -917,11 +919,12 @@ Return Value:
                         int genomeLocationOffset;
                         BaseRef readRef = reversedSeq[elementToScore->direction] + readLen - seedOffset;
                         BaseRef dat = data + seedOffset;
-                        printf("seedoffset: %d\n", seedOffset);
+                        //printf("seedoffset: %d\n", seedOffset);
                         score2 = reverseLandauVishkin->computeEditDistance(dat, seedOffset + MAX_K, readRef,
                                                                                     quality[OppositeDirection(elementToScore->direction)] + readLen - seedOffset, seedOffset, limitLeft, &matchProb2,
                                                                                     &genomeLocationOffset);
-                        printf("score2: %d\n", score2);
+                        //printf("lv rev %d returned : %d\n", lvrev, score2);
+                        //printf("score2: %d\n", score2);
   
                         if (score2 == -1) {
                             score = -1;

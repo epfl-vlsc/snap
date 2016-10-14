@@ -395,9 +395,11 @@ class Read {
         bool                allUpper = false)
     {
       id = i_id;
+      rev = false;
+      revcomp = false;
       idLength = i_idLength;
       sequence = BaseSeq(i_dataLength, i_data, false);
-      printf("creating read: %s\n", sequence.toChars(0));
+      //printf("creating read: %s\n", sequence.toChars(0));
       data = unclippedData = externalData = BaseRef(&sequence);
       quality = unclippedQuality = externalQuality = i_quality;
       dataLength = i_dataLength;
@@ -567,15 +569,19 @@ class Read {
     }*/
 
     BaseSeq reverseComplement(char* buffer) {
-      if (!revcomp)
+      if (!revcomp){
+        //printf("reverse comping!\n");
         reverseComp = sequence.reverseComplement(buffer, dataLength);
+      }
       revcomp = true;
       return reverseComp;
     }
 
     BaseSeq reverse(char* buffer) {
-      if (!rev)
+      if (!rev) {
+        //printf("reversing!\n");
         revers = sequence.reverse(buffer, dataLength);
+      }
 
       rev = true;
       return revers;

@@ -114,6 +114,8 @@ public:
 
 private:
 
+    int lvfwd = 0;
+    int lvrev = 0;
     bool hadBigAllocator;
 
     BaseRef seq[NUM_DIRECTIONS];

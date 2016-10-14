@@ -1395,9 +1395,9 @@ SAMFormat::computeCigar(
     }
 
     *o_editDistance = lv->computeEditDistanceNormalized(
-        &reference,
+        reference,
         (int)(dataLength - *o_extraBasesClippedAfter + MAX_K), // Add space incase of indels.  We know there's enough, because the reference is padded.
-        &dat,
+        dat,
         (int)(dataLength - *o_extraBasesClippedAfter),
         MAX_K - 1,
         cigarBuf,
@@ -1431,9 +1431,9 @@ SAMFormat::computeCigar(
         *o_extraBasesClippedAfter = newExtraBasesClippedAfter;
 
         *o_editDistance = lv->computeEditDistanceNormalized(
-            &reference,
+            reference,
             (int)(dataLength - *o_extraBasesClippedAfter + MAX_K), // Add space incase of indels.  We know there's enough, because the reference is padded.
-            &dat,
+            dat,
             (int)(dataLength - *o_extraBasesClippedAfter),
             MAX_K - 1,
             cigarBuf,

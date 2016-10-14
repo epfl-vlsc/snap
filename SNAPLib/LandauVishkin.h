@@ -358,41 +358,6 @@ private:
     // minimum length of which is represented by the end parameter.  Advances p & t to the first mismatch
     // or first character beyond the end.
     //
-    inline int cpmAligned(BaseRef& p, BaseRef& t, int availBytes) {
-	    BaseRef pBase = p;
-	    BaseRef pend = p + availBytes;
-      
-      while (true) {
-        _uint64 x;
-        int skip = 0;
-        if (TEXT_DIRECTION == 1) {
-          _uint64 p64 = *((_uint64*)p.getPtr());
-          _uint64 t64 = *((_uint64*)t.getPtr());
-          x = p64 ^ t64;
-        } else {
-          _uint64 p64 = *((_uint64*)p.getPtr());
-          _uint64 t64 = *((_uint64*)t.getPtr(-15));
-          _uint64 tSwap = NibbleSwapUI64(t64);
-          x = p64 ^ tSwap;
-        }
-
-        if (x) {
-          unsigned long zeroes;
-          CountTrailingZeroes(x, zeroes);
-          zeroes >>= 2;
-          return __min((int)(p.getOffset() - pBase.getOffset()) + (int)zeroes, availBytes);
-        } // if (x)
-
-        p += 16;
-        if (p.getOffset() >= pend.getOffset()) { // FixMe: JL
-          return availBytes;
-        }
-
-        t += 16 * TEXT_DIRECTION;
-      } // while true
-
-	    return 0;
-    }
 
     inline int countPerfectMatch(BaseRef& p, BaseRef& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
@@ -411,20 +376,46 @@ private:
         if (TEXT_DIRECTION == 1) {
           _uint64 p64 = *((_uint64*)p.getPtr());
           _uint64 t64 = *((_uint64*)t.getPtr());
-          p64 <<= (p_offset & 0x1) << 2;
+          p64 >>= (p_offset & 0x1) << 2;
           skip = (p_offset & 0x1);
-          t64 <<= (t_offset & 0x1) << 2;
-          if (p_offset & 0x1)
-            t64 &= 0xfffffffffffffff0;
+          //t64 >>= (t_offset & 0x1) << 2;
+          if (skip)
+            if (t_offset & 0x1)
+              t64 >>= 4;
+            else
+              t64 &= 0x0fffffffffffffff;
+          else 
+            if (t_offset & 0x1) {
+              t64 >>= 4;
+              p64 &= 0x0fffffffffffffff;
+            }
+
+
           x = p64 ^ t64;
         } else {
           _uint64 p64 = *((_uint64*)p.getPtr());
-          p64 <<= (p_offset & 0x1) << 2;
+          p64 >>= (p_offset & 0x1) << 2;
           skip = (p_offset & 0x1);
-          _uint64 t64 = *((_uint64*)t.getPtr(-15));
+          _uint64 t64;
+          if (t_offset & 0x1)
+            t64 = *((_uint64*)t.getPtr(-15));
+          else
+            t64 = *((_uint64*)t.getPtr(-14));
+
           _uint64 tSwap = NibbleSwapUI64(t64);
-          if (!(t.getOffset() & 0x1) || p.getOffset() & 0x1)
-            t64 &= 0xfffffffffffffff0;
+          if (skip) { // p odd
+            if (t_offset & 0x1)
+              tSwap &= 0x0fffffffffffffff;
+            else
+              tSwap >>= 4;
+          } else {
+            if (!(t_offset & 0x1)) {  // if t even
+              tSwap >>= 4;
+              p64 &= 0x0fffffffffffffff;
+              //p64 >>= 4;
+              skip = 1;
+            }
+          }
           x = p64 ^ tSwap;
         }
 
@@ -435,12 +426,12 @@ private:
           return __min((int)(p_offset - pBase.getOffset()) + (int)zeroes, availBytes);
         } // if (x)
 
-        p += 8 - skip;
+        p += 16 - skip;
         if (p.getOffset() >= pend.getOffset()) { // FixMe: JL
           return availBytes;
         }
 
-        t += (8 - skip) * TEXT_DIRECTION;
+        t += (16 - skip) * TEXT_DIRECTION;
       } // while true
 
 	    return 0;
@@ -448,10 +439,6 @@ private:
 
     inline _uint64 NibbleSwapUI64(_uint64 v) {
         // http://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
-        // swap odd and even bits
-        v = ((v >> 1) & 0x5555555555555555)  | ((v & 0x5555555555555555) << 1);
-        // swap consecutive pairs
-        v = ((v >> 2) & 0x3333333333333333)  | ((v & 0x3333333333333333) << 2);
         // swap nibbles ...
         v = ((v >> 4) & 0x0F0F0F0F0F0F0F0F)  | ((v & 0x0F0F0F0F0F0F0F0F) << 4);
         // swap bytes
@@ -539,15 +526,14 @@ public:
 
     // Compute the edit distance between two strings and write the CIGAR string in cigarBuf.
     // Returns -1 if the edit distance exceeds k or -2 if we run out of space in cigarBuf.
-    int computeEditDistance(const BaseRef* text, int textLen, const BaseRef* pattern, int patternLen, int k,
-                            char* cigarBuf, int cigarBufLen, bool useM,
+    int computeEditDistance(BaseRef text, int textLen, BaseRef pattern, int patternLen, int k, char* cigarBuf, int cigarBufLen, bool useM,
                             CigarFormat format = COMPACT_CIGAR_STRING,
                             int* o_cigarBufUsed = NULL,
                             int* o_textUsed = NULL,
                             int *o_netIndel = NULL);
 
     // same, but places indels as early as possible, following BWA & VCF conventions
-    int computeEditDistanceNormalized(const BaseRef* text, int textLen, const BaseRef* pattern, int patternLen, int k,
+    int computeEditDistanceNormalized(BaseRef text, int textLen, BaseRef pattern, int patternLen, int k,
                             char* cigarBuf, int cigarBufLen, bool useM,
                             CigarFormat format = COMPACT_CIGAR_STRING,
                             int* o_cigarBufUsed = NULL,

@@ -149,6 +149,12 @@ public:
     BaseRef(BaseSeq *bs) : baseSequence(bs), offset(0) {};
     BaseRef(BaseSeq *bs, uint64_t o) : baseSequence(bs), offset(o) {};
 
+    void print(int num) {
+      for (int i = offset; i < offset+num; i++) {
+        printf("%c", baseSequence->getChar(i));
+      }
+      printf("\n");
+    }
     // Assign one of: 'C', 'G', 'A', 'T', 'N' only
     inline BaseRef &operator=(const char x) {
         baseSequence->put(offset, baseSequence->CharToRep(x));
