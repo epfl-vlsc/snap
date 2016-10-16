@@ -455,27 +455,25 @@ private:
 
         if (TEXT_DIRECTION == 1) {
           T_reg = _mm_loadu_si128((__m128i const*)t);
-		    } else {
+        } else {
           __m128i T_temp = _mm_loadu_si128((__m128i const*)(t - 15));
           T_reg = _mm_shuffle_epi8(T_temp, bswap_mask);
-		    }
+        }
         
-        __m128i X = _mm_xor_si128(P_reg, T_reg);
-
-        if (!_mm_test_all_zeros(X, X)) {
-          int char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
+        int char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
+        if (char_match != 16) {
           return __min((int)(p - pBase) + char_match, availBytes);
         }
 
         p += 16;
-		    if (p >= pend) {
-			    return availBytes;
-		    }
+        if (p >= pend) {
+          return availBytes;
+        }
 
-		    t += 16 * TEXT_DIRECTION;
-	    }
+        t += 16 * TEXT_DIRECTION;
+      }
 
-	    return 0;
+      return 0;
     }
 
     //
