@@ -185,44 +185,36 @@ public:
         // dTable is just precomputed d = (d > 0 ? -d : -d+1) to save the branch misprediction from (d > 0)
         int i =0;
         for (d = 0; d != e+1 ; i++, d = dTable[i]) {
+            int end = __min(patternLen, textLen - d);
             int best = L(e-1, d) + 1; // up
             A(e, d) = 'X';
 
-            const char* p = pattern + best;
-            const char* t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
-            if (*p == *t && best >= 0) {
-                int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
+            if (best >= 0) {
+                p = pattern + best;
+                t = (text + d * TEXT_DIRECTION) + best * TEXT_DIRECTION;
 
                 best += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
 
-
             int left = L(e-1, d-1);
-            p = pattern + left;
-            t = (text + d * TEXT_DIRECTION) + left * TEXT_DIRECTION;
-            if (*p == *t && left >= 0) {
-                int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
+            if (left >= 0) {
+                p = pattern + left;
+                t = (text + d * TEXT_DIRECTION) + left * TEXT_DIRECTION;
 
                 left += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
-
             if (left > best) {
                 best = left;
                 A(e, d) = 'D';
             }
 
             int right = L(e-1, d+1) + 1;
-            p = pattern + right;
-            t = (text + d * TEXT_DIRECTION) + right * TEXT_DIRECTION;
-            if (*p == *t && right >= 0) {
-                int end = __min(patternLen, textLen - d);
-                const char* pend = pattern + end;
+            if (right >= 0) {
+                p = pattern + right;
+                t = (text + d * TEXT_DIRECTION) + right * TEXT_DIRECTION;
 
                 right += countPerfectMatch(p, t, (int)(end - (p - pattern)));
             }
-
             if (right > best) {
                 best = right;
                 A(e, d) = 'I';
@@ -366,114 +358,37 @@ private:
     //
     inline int countPerfectMatch(const char *& p, const char *& t, int availBytes)      // This is essentially duplicated in LandauVishkinWithCigar
     {
-      // TODO: move the constant outside the function
-      const char *pBase = p;
-	    const char *pend = p + availBytes;
-/*
-      // SNAP original version
-      while (true) {
-		    _uint64 x;
-		    if (TEXT_DIRECTION == 1) {
-			    x = *((_uint64*)p) ^ *((_uint64*)t);
-		    } else {
-			    _uint64 T = *(_uint64 *)(t - 7);
-			    _uint64 tSwap = ByteSwapUI64(T);
-			    x = *((_uint64*)p) ^ tSwap;
-		    }
+        static const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
 
-		    if (x) {
-			    unsigned long zeroes;
-			    CountTrailingZeroes(x, zeroes);
-			    zeroes >>= 3;
-			    return __min((int)(p - pBase) + (int)zeroes, availBytes);
-		    } // if (x)
+        const char *pBase = p;
+        const char *pend = p + availBytes;
 
-		    p += 8;
-		    if (p >= pend) {
-			    return availBytes;
-		    }
+        while (true) {
+            __m128i P_reg;
+            __m128i T_reg;
 
-		    t += 8 * TEXT_DIRECTION;
-	    } // while true
-*/
-
-/*
-      // Processing 128 bits at a time - with branch
-      static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
-      while (true) {
-		    unsigned __int128 x;
-  
-        if (TEXT_DIRECTION == 1) {
-          x = *((unsigned __int128*)p) ^ *((unsigned __int128*)t);
-		    } else {
-
-          _uint64 T1 = *(_uint64*)(t - 7);
-          _uint64 T2 = *(_uint64*)(t - 15);
-          __m128i T_reg = _mm_set_epi64x(T2, T1);
-
-          __m128i tSwap_reg = _mm_shuffle_epi8(T_reg, bswap_mask);
-			    unsigned __int128 tSwap = *((unsigned __int128*)(&tSwap_reg)); // TODO: probably not 100% safe
-          
-			    x = *((unsigned __int128*)p) ^ tSwap;
-		    }
-
-        if (x) {
-          _uint64 zeroes;
-          _uint64 lo; 
-          
-          if (x & MASK_128_LO) {
-            lo = x & MASK_128_LO;
-            CountTrailingZeroes(lo, zeroes);
-          } else {
-            _uint64 hi = x >> 64;
-            CountTrailingZeroes(hi, zeroes);
-            zeroes += 64; // because the lower 64 bits were all 0
-          } 
-
-          zeroes >>= 3;
-          return __min((int)(p - pBase) + (int)zeroes, availBytes);
-        }
-
-		    p += 16;
-		    if (p >= pend) {
-			    return availBytes;
-		    }
-
-		    t += 16 * TEXT_DIRECTION;
-	    }
-*/
-
-
- 
-      // Processing 128 bits at a time - without branch
-      // static const __m128i bswap_mask = _mm_setr_epi8(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8);
-      const __m128i bswap_mask = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-      while (true) {
-        __m128i T_reg;
-      
-        __m128i P_reg = _mm_loadu_si128((__m128i const*)p);
-
-        if (TEXT_DIRECTION == 1) {
-          T_reg = _mm_loadu_si128((__m128i const*)t);
-        } else {
-          __m128i T_temp = _mm_loadu_si128((__m128i const*)(t - 15));
-          T_reg = _mm_shuffle_epi8(T_temp, bswap_mask);
-        }
+            P_reg = _mm_loadu_si128((__m128i const*)p);
+            if (TEXT_DIRECTION == 1) {
+                T_reg = _mm_loadu_si128((__m128i const*)t);
+            } else {
+                __m128i T_temp = _mm_loadu_si128((__m128i const*)(t - 15));
+                T_reg = _mm_shuffle_epi8(T_temp, bswap_mask);
+            }
         
-        int char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
-        if (char_match != 16) {
-          return __min((int)(p - pBase) + char_match, availBytes);
+            int char_match = _mm_cmpestri(P_reg, 16, T_reg, 16, COMPARE_CTRL);
+            if (char_match != 16) {
+                return __min((int)(p - pBase) + char_match, availBytes);
+            }
+
+            p += 16;
+            if (p >= pend) {
+                return availBytes;
+            }
+
+            t += 16 * TEXT_DIRECTION;
         }
 
-        p += 16;
-        if (p >= pend) {
-          return availBytes;
-        }
-
-        t += 16 * TEXT_DIRECTION;
-      }
-
-      return 0;
+        return 0;
     }
 
     //

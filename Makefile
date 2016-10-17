@@ -1,5 +1,5 @@
 ifndef CXXFLAGS
-  CXXFLAGS = -O3 -Wno-format
+  CXXFLAGS = -O3 -g -Wno-format
 endif
 
 CXXFLAGS += -MMD -ISNAPLib -msse -mssse3 -msse4.2
