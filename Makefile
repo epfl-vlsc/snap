@@ -1,5 +1,14 @@
 ifndef CXXFLAGS
-  CXXFLAGS = -O3 -Wno-format
+  CXXFLAGS = -Wno-format
+endif
+
+# pass in `make DEBUG=1` to build with debug info
+# optimized for gdb
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -g2 -ggdb -O0
+else
+  CXXFLAGS += -O3
 endif
 
 CXXFLAGS += -MMD -ISNAPLib -msse
