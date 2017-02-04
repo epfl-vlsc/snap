@@ -385,7 +385,7 @@ BAMAlignment::getClippingFromCigar(
     void
 BAMAlignment::encodeSeq(
     _uint8* encoded,
-    char* ascii,
+    const char* ascii,
     int length)
 {
     _uint8* p = encoded;

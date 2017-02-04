@@ -149,7 +149,7 @@ struct BAMAlignment
     static bool decodeCigar(char* o_cigar, int cigarSize, _uint32* cigar, int ops);
     static void getClippingFromCigar(_uint32 *cigar, int ops, unsigned *o_frontClipping, unsigned *o_backClipping, unsigned *o_frontHardClipping, unsigned *o_backHardClipping);
 
-    static void encodeSeq(_uint8* nibbles, char* ascii, int length);
+    static void encodeSeq(_uint8* nibbles, const char* ascii, int length);
 
     int l_ref(); // length of reference aligned to read
 
