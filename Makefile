@@ -27,7 +27,7 @@ endif
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-  LIBS += -lrt -lz -llttng-ust -ldl
+  LIBS += -lrt -lz
 endif
 
 ifeq ($(UNAME), Darwin)
