@@ -1415,7 +1415,12 @@ OpenMemoryMappedFile(
   size_t remainder = (length % 256);
   size_t aligned_size = remainder ? length + 256 - remainder : length;
 
+#ifndef __APPLE__
   void* hugepage_region = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+#else
+  void* hugepage_region = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
+
   if (hugepage_region == reinterpret_cast<void*>(-1)) {
     WriteErrorMessage("unable to mmap huge region. You probably need more huge pages\n");
     soft_exit(1);
